@@ -19,7 +19,8 @@ Homepage: http://github.com/~knitzsche/game-1
 
 Package: ripples
 Architecture: amd64 armhf
-Depends: libsdl2-dev (>= 2.0.4)
+Depends: libsdl2 (>= 2.0.4),
+         libsdl2-gfx,
          ${misc:Depends},
          ${shlibs:Depends}
 Description: A ripple game

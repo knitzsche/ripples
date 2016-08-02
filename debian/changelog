@@ -1,3 +1,15 @@
+ripples (0.1ubuntu7) vivid; urgency=medium
+
+  * build for vivid
+
+ -- Kyle Nitzsche <kyle.nitzsche@canonical.com>  Tue, 02 Aug 2016 14:28:06 -0400
+
+ripples (0.1ubuntu6) xenial; urgency=medium
+
+  * bump version only to build in ppa that now has armhf
+
+ -- Kyle Nitzsche <kyle.nitzsche@canonical.com>  Tue, 02 Aug 2016 12:15:06 -0400
+
 ripples (0.1ubuntu5) xenial; urgency=medium
 
   * cleanup in prep for git
