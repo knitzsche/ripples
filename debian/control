@@ -1,0 +1,25 @@
+Source: ripples
+Section: games
+Priority: optional
+Maintainer: Kyle Nitzsche <ubuntu-devel-discuss@lists.ubuntu.com>
+Build-Depends: cmake,
+               debhelper (>= 9),
+# To allow cross-compiling to work, we also must append :native
+# to g++ so we don't try to run armhf g++
+# on an x86 CPU for eaxmple, when cross-compiling.
+               g++:native,
+               libgl1-mesa-dev[!armhf] | libgl-dev[!armhf],
+               libgl1-mesa-dri,
+               libgles2-mesa-dev[armhf],
+               pkg-config,
+               libsdl2-dev,
+               libsdl2-gfx-dev
+Standards-Version: 3.9.4
+Homepage: http://github.com/~knitzsche/game-1
+
+Package: ripples
+Architecture: amd64 armhf
+Depends: libsdl2-dev (>= 2.0.4)
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: A ripple game

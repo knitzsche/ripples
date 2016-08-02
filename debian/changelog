@@ -1,0 +1,37 @@
+ripples (0.1ubuntu5) xenial; urgency=medium
+
+  * cleanup in prep for git
+
+ -- Kyle Nitzsche <kyle.nitzsche@canonical.com>  Tue, 02 Aug 2016 12:02:04 -0400
+
+ripples (0.1ubuntu4) xenial; urgency=medium
+
+  * again, install dir fix. this time not using debian/ripples.install.
+    instead relying on cmake install command 
+
+ -- Kyle Nitzsche <kyle.nitzsche@canonical.com>  Tue, 02 Aug 2016 11:42:08 -0400
+
+ripples (0.1ubuntu3) xenial; urgency=medium
+
+  * fix install dir
+
+ -- Kyle Nitzsche <kyle.nitzsche@canonical.com>  Mon, 01 Aug 2016 19:16:15 -0400
+
+ripples (0.1ubuntu2) xenial; urgency=medium
+
+  * remove unsued include 
+
+ -- Kyle Nitzsche <kyle.nitzsche@canonical.com>  Mon, 01 Aug 2016 19:01:11 -0400
+
+ripples (0.1ubuntu1) xenial; urgency=medium
+
+  * add sdl build deps
+  * remove i386 arch
+
+ -- Kyle Nitzsche <kyle.nitzsche@canonical.com>  Mon, 01 Aug 2016 18:50:58 -0400
+
+ripples (0.1) xenial; urgency=medium
+
+  * Initial
+
+ -- Kyle Nitzsche <kyle.nitzsche@canonical.com>  Mon, 01 Aug 2016 17:41:49 -0400
