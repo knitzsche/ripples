@@ -208,9 +208,8 @@ pair<Position, Position> getNextPosition(shared_ptr<MovingCircle> c) {
 }
 
 void moveCircleTrajectory(std::shared_ptr<MovingCircle> c) {
-	double distance = getDistanceMove(c);
+	getDistanceMove(c);
 	//cout << c->p.x << "," << c->p.y << endl;
-	Position p;
 	pair<Position, Position> ps = getNextPosition(c);
 	c->p.x = ps.first.x;
 	c->p.y = ps.first.y;
@@ -231,9 +230,6 @@ int main(int, char**){
 	RGB bg;
 	bg.r = 20; bg.g = 20; bg.b = 20; bg.a = 255;
 
-	RGB flash;
-	flash.r = 20; flash.g = 50; flash.b = 200; flash.a = 255;
-
 	std::shared_ptr<Gun> gun = std::make_shared<Gun>();
 	gun->x = 400;
 	gun->y = SCREEN_HEIGHT - 200;
@@ -247,13 +243,25 @@ int main(int, char**){
 		SDL_Quit();
 		return 1;
 	}
-	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+
+    if (!renderer)
+    {
+        renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
+    }
+
 	if (renderer == nullptr){
 		logSDLError(std::cout, "CreateRenderer");
 		cleanup(window);
 		SDL_Quit();
 		return 1;
 	}
+    SDL_RendererInfo rinfo;
+    SDL_GetRendererInfo(renderer, &rinfo);
+    cout << rinfo.name << endl;
+
+	//SDL_Renderer *renderer = SDL_CreateRenderer(window, -1,  SDL_RENDERER_ACCELERATED | SDL_RENDERER_SOFTWARE );
+	//SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE | SDL_RENDERER_ACCELERATED);
 	SDL_Surface *surface = SDL_GetWindowSurface(window);
 	if (surface == nullptr){
 		logSDLError(std::cout, "CreateSurface");
@@ -291,12 +299,8 @@ int main(int, char**){
 	SDL_Event e;
 	bool quit = false;
 	int mx = gun->x - 40; int my = gun->y + 40;
-	bool isFlash = false;
-	int flashCount = -1;
-	int move = -1;
 
 	while (!quit){
-
 		clock_t startTime = clock();
 		//cout << "start time: " << startTime << endl;; 
 		//cout << "clocks per sec: " << CLOCKS_PER_SEC << endl; 
@@ -313,10 +317,13 @@ int main(int, char**){
 			}
 			// user clicks the mouse
 			if (e.type == SDL_MOUSEBUTTONDOWN){
-				//addRect(rects);
 		        addRipple(ripples, e.button.x, e.button.y);		
                 addGridToRipple((*ripples->back()), (*grid_circles));
 			}
+			if (e.type == SDL_FINGERDOWN){
+		        addRipple(ripples, e.tfinger.x, e.tfinger.y);		
+                addGridToRipple((*ripples->back()), (*grid_circles));
+            }
 			// user presses any key
 			if (e.type == SDL_KEYDOWN){
 				int amt = 8;
