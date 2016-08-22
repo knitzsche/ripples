@@ -226,7 +226,6 @@ int main(int, char**){
 	}
     setScreen();
 
-
 	RGB bg;
 	bg.r = 20; bg.g = 20; bg.b = 20; bg.a = 255;
 
@@ -236,16 +235,22 @@ int main(int, char**){
 
 	//Setup our window and renderer, this time let's put our window in the center
 	//of the screen
-	SDL_Window *window = SDL_CreateWindow("Lesson 4", SDL_WINDOWPOS_CENTERED,
-			SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+	SDL_Window *window = SDL_CreateWindow("Ripples", 
+                                           SDL_WINDOWPOS_CENTERED,
+			                               SDL_WINDOWPOS_CENTERED,
+                                           SCREEN_WIDTH,
+                                           SCREEN_HEIGHT,
+                                           SDL_WINDOW_OPENGL);
 	if (window == nullptr){
 		logSDLError(std::cout, "CreateWindow");
 		SDL_Quit();
 		return 1;
 	}
-    SDL_Renderer* renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+    SDL_GL_CreateContext(window);
+    SDL_Renderer* renderer;
+    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
 
-    if (!renderer)
+    if (renderer == nullptr)
     {
         renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
     }
@@ -260,8 +265,6 @@ int main(int, char**){
     SDL_GetRendererInfo(renderer, &rinfo);
     cout << rinfo.name << endl;
 
-	//SDL_Renderer *renderer = SDL_CreateRenderer(window, -1,  SDL_RENDERER_ACCELERATED | SDL_RENDERER_SOFTWARE );
-	//SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE | SDL_RENDERER_ACCELERATED);
 	SDL_Surface *surface = SDL_GetWindowSurface(window);
 	if (surface == nullptr){
 		logSDLError(std::cout, "CreateSurface");

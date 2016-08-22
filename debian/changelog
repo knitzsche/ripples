@@ -1,3 +1,9 @@
+ripples (0.1ubuntu8) xenial; urgency=medium
+
+  * add depends on libgl1-mesa-glx for opengl window creation
+
+ -- Kyle Nitzsche <kyle.nitzsche@canonical.com>  Mon, 22 Aug 2016 18:10:50 -0400
+
 ripples (0.1ubuntu7) vivid; urgency=medium
 
   * build for vivid

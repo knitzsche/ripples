@@ -21,6 +21,7 @@ Package: ripples
 Architecture: amd64 armhf
 Depends: libsdl2 (>= 2.0.4),
          libsdl2-gfx,
+         libgl1-mesa-glx,
          ${misc:Depends},
          ${shlibs:Depends}
 Description: A ripple game
