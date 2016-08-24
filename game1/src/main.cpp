@@ -27,7 +27,6 @@
 
 #include <SDL.h>
 #include <SDL2_gfxPrimitives.h> //install libsdl2-gfx-dev
-#include "cleanup.h"
 
 using namespace std;
 
@@ -218,6 +217,19 @@ void moveCircleTrajectory(std::shared_ptr<MovingCircle> c) {
 	return;
 }
 
+void cleanup(SDL_Window * window, SDL_Renderer * renderer){
+    SDL_DestroyWindow(window);
+    SDL_DestroyRenderer(renderer);
+}
+
+void cleanup(SDL_Window * window){
+    SDL_DestroyWindow(window);
+}
+
+void cleanup(SDL_Renderer * renderer){
+    SDL_DestroyRenderer(renderer);
+}
+
 int main(int, char**){
 	//Start up SDL and make sure it went ok
 	if (SDL_Init(SDL_INIT_VIDEO) != 0){
@@ -346,7 +358,7 @@ int main(int, char**){
 				}
 			}
 			/*
-			if (e.type == SDL_MOUSEMOTION){
+	
 				//std::cout << " MOUSE MOTION. x: " << e.motion.x << std::endl;
 				mx = e.motion.x; my = e.motion.y;
 				//std::cout << " MM res: " << res << std::endl;
@@ -421,12 +433,12 @@ int main(int, char**){
 		clock_t endTime = clock();
 		clock_t ellapsedTime = endTime - startTime;
 		float ellapsed = (float)ellapsedTime/CLOCKS_PER_SEC;
-		//cout << "elapsed time: " << ellapsed << endl;; 
+		cout << "elapsed time: " << ellapsed << endl;; 
 		if (ellapsed < 0.0333) // 30 franmes per second
 			SDL_Delay(0.0333 - ellapsed);
 	}
 
-	cleanup( renderer, window);
+	cleanup(window, renderer);
 	SDL_Quit();
 
 	return 0;
