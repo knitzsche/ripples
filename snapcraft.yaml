@@ -1,0 +1,35 @@
+name: ripples 
+version: "1"
+summary: Ripples game
+description: Make ripples by touching and clicking
+confinement: strict 
+
+apps:
+  ripples:
+    command: bin/ripplesrun
+    plugs: [opengl]
+
+parts:
+  ripples:
+    plugin: cmake
+    source: https://github.com/knitzsche/ripples
+    source-type: git      
+    build-packages:
+      - build-essential
+      - cmake
+      - g++
+      - libgles2-mesa-dev
+      - pkg-config
+      - libsdl2-dev
+      - libsdl2-gfx-dev
+    stage-packages:
+      - libsdl2-2.0-0
+      - libsdl2-gfx-1.0-0
+      - libdrm2
+      - libegl1-mesa
+      - libgles2-mesa
+      - libgl1-mesa-glx
+  environment:
+    plugin: dump
+    organize:
+      ripples.wrapper: bin/ripplesrun
