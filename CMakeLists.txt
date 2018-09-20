@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(ripples)
 
+
 # Use our modified FindSDL2* modules
 set(CMAKE_MODULE_PATH "${ripples_SOURCE_DIR}/cmake")
 #message("mod path " ${CMAKE_MODULE_PATH})
