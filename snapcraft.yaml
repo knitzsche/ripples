@@ -11,12 +11,12 @@ apps:
      - opengl
      - wayland
 
-plugs: 
-   wayland-socket-dir:
-     content: wayland-socket-dir
-     interface: content
-     target: $SNAP_DATA/wayland
-     default-provider: mir-kiosk:wayland-socket-dir
+#plugs: 
+#   wayland-socket-dir:
+#     content: wayland-socket-dir
+#     interface: content
+#     target: $SNAP_DATA/wayland
+#     default-provider: mir-kiosk:wayland-socket-dir
 
 parts:
   ripples:
@@ -34,14 +34,14 @@ parts:
     stage-packages:
       - libsdl2-2.0-0
       - libsdl2-gfx-1.0-0
+      - libdri2-1
       - libdrm2
-      - libegl1-mesa
       - libgles2-mesa
       - libgl1-mesa-glx
       - libpulse0
 environment:
-  LD_LIBRARY_PATH: $SNAP/usr/lib/arm-linux-gnueabihf/pulseaudio/
-  XDG_RUNTIME_DIR: $SNAP_DATA/waylan
+  LD_LIBRARY_PATH: $SNAP/usr/lib/arm-linux-gnueabihf/:$SNAP/usr/lib/arm-linux-gnueabihf/dri:$SNAP/usr/lib/arm-linux-gnueabihf/mesa:$SNAP/usr/lib/arm-linux-gnueabihf/mesa-gl:$SNAP/usr/lib/arm-linux-gnueabihf/xorg:$SNAP/usr/lib/arm-linux-gnueabihf/pulseaudio/
+#  XDG_RUNTIME_DIR: $SNAP_DATA/wayland
 #    plugin: dump
 #    organize:
 #      ripples.wrapper: bin/ripplesrun
