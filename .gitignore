@@ -4,3 +4,7 @@ debian/ripples.debhelper.log
 debian/ripples.substvars
 debian/ripples
 obj-x86_64-linux-gnu
+parts
+stage
+primge
+snap
