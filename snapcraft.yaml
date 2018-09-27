@@ -6,19 +6,18 @@ confinement: strict
 
 apps:
   ripples:
-    command: bin/ripples
+    daemon: simple
+    command: ripples.wrapper
     plugs:
      - opengl
      - wayland
 
-#plugs: 
-#   wayland-socket-dir:
-#     content: wayland-socket-dir
-#     interface: content
-#     target: $SNAP_DATA/wayland
-#     default-provider: mir-kiosk:wayland-socket-dir
-
 parts:
+  wrapper:
+    plugin: dump
+    source: wrapper
+    organize:  
+      run.sh: bin/ripples.wrapper
   ripples:
     plugin: cmake
     source: https://github.com/knitzsche/ripples
@@ -41,7 +40,3 @@ parts:
       - libpulse0
 environment:
   LD_LIBRARY_PATH: $SNAP/usr/lib/arm-linux-gnueabihf/:$SNAP/usr/lib/arm-linux-gnueabihf/dri:$SNAP/usr/lib/arm-linux-gnueabihf/mesa:$SNAP/usr/lib/arm-linux-gnueabihf/mesa-gl:$SNAP/usr/lib/arm-linux-gnueabihf/xorg:$SNAP/usr/lib/arm-linux-gnueabihf/pulseaudio/
-#  XDG_RUNTIME_DIR: $SNAP_DATA/wayland
-#    plugin: dump
-#    organize:
-#      ripples.wrapper: bin/ripplesrun
