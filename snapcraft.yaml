@@ -1,13 +1,16 @@
 name: ripples
-version: "1"
+version: "2"
 summary: Ripples game
 description: Make ripples by touching and clicking
 confinement: strict
+base: core18
 
 apps:
-  ripples:
-    daemon: simple
-    command: ripples.wrapper
+  run:
+    command: bin/ripples
+    environment:
+      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/x86_64-linux-gnu/pulseaudio/"
+    adapter: full
     plugs:
      - opengl
      - wayland
@@ -20,8 +23,7 @@ parts:
       run.sh: bin/ripples.wrapper
   ripples:
     plugin: cmake
-    source: https://github.com/knitzsche/ripples
-    source-type: git
+    source: src/
     build-packages:
       - build-essential
       - cmake
