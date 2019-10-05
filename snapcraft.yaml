@@ -4,23 +4,24 @@ summary: Ripples game
 description: Make ripples by touching and clicking
 confinement: strict
 base: core18
+grade: stable
 
 apps:
   run:
     command: bin/ripples
     environment:
-      LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:$SNAP/usr/lib/x86_64-linux-gnu/pulseaudio/"
-    adapter: full
+      LD_LIBRARY_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/dri:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/mesa:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/mesa-gl:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/xorg:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pulseaudio/
+      LIBGL_DRIVERS_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/dri 
+      #adapter: full
     plugs:
      - opengl
      - wayland
+     - network
+     - network-bind
+     - network-control
+     - x11
 
 parts:
-  wrapper:
-    plugin: dump
-    source: wrapper
-    organize:  
-      run.sh: bin/ripples.wrapper
   ripples:
     plugin: cmake
     source: src/
@@ -40,5 +41,3 @@ parts:
       - libgles2-mesa
       - libgl1-mesa-glx
       - libpulse0
-environment:
-  LD_LIBRARY_PATH: $SNAP/usr/lib/arm-linux-gnueabihf/:$SNAP/usr/lib/arm-linux-gnueabihf/dri:$SNAP/usr/lib/arm-linux-gnueabihf/mesa:$SNAP/usr/lib/arm-linux-gnueabihf/mesa-gl:$SNAP/usr/lib/arm-linux-gnueabihf/xorg:$SNAP/usr/lib/arm-linux-gnueabihf/pulseaudio/
