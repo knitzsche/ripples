@@ -216,8 +216,6 @@ void moveCircleTrajectory(std::shared_ptr<MovingCircle> c) {
 	return;
 }
 
-//bool isCollision(
-
 void cleanup(SDL_Window * window, SDL_Renderer * renderer){
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
@@ -398,11 +396,21 @@ int main(int, char**){
         ripples = remaining_ripples;
         //cout << "RIPPLES: " << ripples->size() << endl;
 
-        //grow and render ripple cricles
+        //grow ripple cricles
         for( std::shared_ptr<Ripple> &c : *ripples )
         {
             growRipple(c);
         }
+
+		//move bullets
+		shared_ptr<vector<shared_ptr<MovingCircle>>> new_bullets = make_shared<vector<shared_ptr<MovingCircle>>>(); 
+		for( std::shared_ptr<MovingCircle> &c : *bullets ) {
+			moveCircleTrajectory(c);
+			if (c->p.x < SCREEN_WIDTH && c->p.x > 0 && c->p.y < SCREEN_HEIGHT && c->p.y > 0 ){
+				new_bullets->emplace_back(c); // keep if still on screen
+			}
+		}
+		bullets = new_bullets;
 
         //render ripple cricles
         for( std::shared_ptr<Ripple> &c : *ripples )
@@ -423,16 +431,6 @@ int main(int, char**){
                 }
             }
         }
-		//move bullets
-		shared_ptr<vector<shared_ptr<MovingCircle>>> newCircles = make_shared<vector<shared_ptr<MovingCircle>>>(); 
-		for( std::shared_ptr<MovingCircle> &c : *bullets ) {
-			moveCircleTrajectory(c);
-			if (c->p.x < SCREEN_WIDTH && c->p.x > 0 && c->p.y < SCREEN_HEIGHT && c->p.y > 0 ){
-				newCircles->emplace_back(c); // keep if still on screen
-			}
-		}
-		bullets = newCircles;
-
 		//Render bullets
 		for( std::shared_ptr<MovingCircle> &c : *bullets ) {
 			SDL_SetRenderDrawColor( renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
