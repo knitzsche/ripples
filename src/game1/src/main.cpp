@@ -217,6 +217,8 @@ void moveCircleTrajectory(std::shared_ptr<MovingCircle> c) {
 	return;
 }
 
+//bool isCollision(
+
 void cleanup(SDL_Window * window, SDL_Renderer * renderer){
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
@@ -230,37 +232,18 @@ void cleanup(SDL_Renderer * renderer){
     SDL_DestroyRenderer(renderer);
 }
 
-int main(int, char**){
-	//Start up SDL and make sure it went ok
-	if (SDL_Init(SDL_INIT_VIDEO) != 0){
-		logSDLError(std::cout, "SDL_Init");
-		return 1;
-	}
-    setScreen();
+/*
+ * Setup window and renderer
+ */
+bool setup(SDL_Window * window, SDL_Renderer *renderer){
 
-	RGB bg;
-	bg.r = 20; bg.g = 20; bg.b = 20; bg.a = 255;
-
-	std::shared_ptr<Gun> gun = std::make_shared<Gun>();
-	gun->x = 400;
-	gun->y = SCREEN_HEIGHT - 200;
-
-	//Setup our window and renderer, this time let's put our window in the center
-	//of the screen
-	SDL_Window *window = SDL_CreateWindow("Ripples", 
-                                           SDL_WINDOWPOS_CENTERED,
-			                               SDL_WINDOWPOS_CENTERED,
-                                           SCREEN_WIDTH,
-                                           SCREEN_HEIGHT,
-                                           SDL_WINDOW_OPENGL);
 	if (window == nullptr){
 		logSDLError(std::cout, "CreateWindow");
 		SDL_Quit();
-		return 1;
+		return false;
 	}
+
     SDL_GL_CreateContext(window);
-    SDL_Renderer* renderer;
-    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
 
     if (renderer == nullptr)
     {
@@ -271,19 +254,52 @@ int main(int, char**){
 		logSDLError(std::cout, "CreateRenderer");
 		cleanup(window);
 		SDL_Quit();
-		return 1;
+		return false;
 	}
     SDL_RendererInfo rinfo;
     SDL_GetRendererInfo(renderer, &rinfo);
-    cout << rinfo.name << endl;
+    std::cout << rinfo.name << std::endl;
 
 	SDL_Surface *surface = SDL_GetWindowSurface(window);
 	if (surface == nullptr){
 		logSDLError(std::cout, "CreateSurface");
 		cleanup(window, renderer);
 		SDL_Quit();
-		return 1;
+		return false;
 	}
+
+
+    return true;
+} 
+
+int main(int, char**){
+
+    //setScreen();
+	SDL_Window *window = SDL_CreateWindow("Ripples", 
+                                           SDL_WINDOWPOS_CENTERED,
+			                               SDL_WINDOWPOS_CENTERED,
+                                           SCREEN_WIDTH,
+                                           SCREEN_HEIGHT,
+	                                       SDL_WINDOW_OPENGL);
+
+    SDL_Renderer *renderer;
+    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+  
+
+    bool setupOK;
+    setupOK = setup(window, renderer);
+    if ( !setupOK ){
+        std::cout << "SDL setup error. Quitting" << std::endl;
+        return 1;
+    }
+
+   	RGB bg;
+	bg.r = 20; bg.g = 20; bg.b = 20; bg.a = 255;
+
+	std::shared_ptr<Gun> gun = std::make_shared<Gun>();
+	gun->x = 200;
+	gun->y = SCREEN_HEIGHT - 200;
+
 
 	// vector of dynamically created resctangles
 	std::shared_ptr<std::vector<std::shared_ptr<SDL_Rect>>> rects = std::make_shared<std::vector<std::shared_ptr<SDL_Rect>>>();
@@ -433,7 +449,7 @@ int main(int, char**){
 		clock_t endTime = clock();
 		clock_t ellapsedTime = endTime - startTime;
 		float ellapsed = (float)ellapsedTime/CLOCKS_PER_SEC;
-		cout << "elapsed time: " << ellapsed << endl;; 
+		//cout << "elapsed time: " << ellapsed << endl;; 
 		if (ellapsed < 0.0333) // 30 franmes per second
 			SDL_Delay(0.0333 - ellapsed);
 	}
