@@ -89,7 +89,6 @@ public:
     int width = 50;
 };
 
-
 void addRipple(std::shared_ptr<std::vector<std::shared_ptr<Ripple>>> cs, int const& x = 20, int const& y = 80, int const& r = 100, int const& g = 200, int const& b = 200, int const& a = 200, int const& expand_speed = 5, int const& width = 50) {
     //cout << " in addCircle(). x: " << x << " y: " << y << endl;
 	std::shared_ptr<Ripple> c = std::make_shared<Ripple>();
@@ -268,9 +267,10 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer){
 		return false;
 	}
 
-
     return true;
 } 
+
+
 
 int main(int, char**){
 
@@ -284,7 +284,6 @@ int main(int, char**){
 
     SDL_Renderer *renderer;
     renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
-  
 
     bool setupOK;
     setupOK = setup(window, renderer);
@@ -300,11 +299,11 @@ int main(int, char**){
 	gun->x = 200;
 	gun->y = SCREEN_HEIGHT - 200;
 
-
-	// vector of dynamically created resctangles
-	std::shared_ptr<std::vector<std::shared_ptr<SDL_Rect>>> rects = std::make_shared<std::vector<std::shared_ptr<SDL_Rect>>>();
-	// vector of moving moving_circles
-	std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> moving_circles = std::make_shared<std::vector<std::shared_ptr<MovingCircle>>>();
+	// vector of dynamically created rectangles
+	//std::shared_ptr<std::vector<std::shared_ptr<SDL_Rect>>> rects = std::make_shared<std::vector<std::shared_ptr<SDL_Rect>>>();
+	
+	// vector of moving bullets
+	std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> bullets = std::make_shared<std::vector<std::shared_ptr<MovingCircle>>>();
 
 	// vector of grid circles 
 	std::shared_ptr<std::vector<std::shared_ptr<Circle>>> grid_circles = std::make_shared<std::vector<std::shared_ptr<Circle>>>();
@@ -313,7 +312,7 @@ int main(int, char**){
 	std::shared_ptr<std::vector<std::shared_ptr<Ripple>>> ripples = std::make_shared<std::vector<std::shared_ptr<Ripple>>>();
 
     int x_iters = int(SCREEN_WIDTH/20);
-    int  y_iters = int(SCREEN_HEIGHT/20);
+    int y_iters = int(SCREEN_HEIGHT/20);
     //cout << "x_iters: " << x_iters  << endl;
     //cout << "y_itrd: " << y_iters << endl;
     int  grid = 20;
@@ -368,20 +367,20 @@ int main(int, char**){
 				} else if (e.key.keysym.scancode == SDL_SCANCODE_DOWN) {
 					my += amt;
 				} else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-					addMovingCirclePrevious(moving_circles, gun, mx, my);
+					addMovingCirclePrevious(bullets, gun, mx, my);
 				} else if (e.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
 					quit = true;
 				}
 			}
 			/*
-	
 				//std::cout << " MOUSE MOTION. x: " << e.motion.x << std::endl;
 				mx = e.motion.x; my = e.motion.y;
 				//std::cout << " MM res: " << res << std::endl;
 			}
 			*/
 		}
-        //render grid cricles
+
+        //render grid cricles 
 		for( std::shared_ptr<Circle> &c : *grid_circles ) {
 			SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
 			int res = filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
@@ -403,6 +402,11 @@ int main(int, char**){
         for( std::shared_ptr<Ripple> &c : *ripples )
         {
             growRipple(c);
+        }
+
+        //render ripple cricles
+        for( std::shared_ptr<Ripple> &c : *ripples )
+        {
             SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
             int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
             if (res == -1) 
@@ -416,30 +420,32 @@ int main(int, char**){
                 {
                     SDL_SetRenderDrawColor(renderer, 200, 200, 50, 200);
                     filledCircleRGBA(renderer, p->circle->p.x, p->circle->p.y, p->circle->r, 230, 10, 10, 255);
-                    //circleRGBA(renderer, p->circle->p.x, p->circle->p.y, p->circle->r, p->circle->rgb.r, p->circle->rgb.g, p->circle->rgb.b, p->circle->rgb.a);
-                    
                 }
             }
         }
-		// render gun
-		SDL_SetRenderDrawColor( renderer, 200, 100, 200, 255 );
-		SDL_RenderDrawLine(renderer, mx, my, gun->x, gun ->y);
-		//filledCircleRGBA(renderer, gun->x, gun->y, 10, 200, 10, 10, target->rgb.a);
-
-		//Render bullets
+		//move bullets
 		shared_ptr<vector<shared_ptr<MovingCircle>>> newCircles = make_shared<vector<shared_ptr<MovingCircle>>>(); 
-		for( std::shared_ptr<MovingCircle> &c : *moving_circles ) {
-			SDL_SetRenderDrawColor( renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
-			
-			int res = filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
-			if (res == -1) 
-				cout << "=========== ERROR res: " << res << endl;
+		for( std::shared_ptr<MovingCircle> &c : *bullets ) {
 			moveCircleTrajectory(c);
 			if (c->p.x < SCREEN_WIDTH && c->p.x > 0 && c->p.y < SCREEN_HEIGHT && c->p.y > 0 ){
 				newCircles->emplace_back(c); // keep if still on screen
 			}
 		}
-		moving_circles = newCircles;
+		bullets = newCircles;
+
+		//Render bullets
+		for( std::shared_ptr<MovingCircle> &c : *bullets ) {
+			SDL_SetRenderDrawColor( renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
+			
+			int res = filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
+			if (res == -1) 
+				cout << "=========== ERROR res: " << res << endl;
+		}
+
+		// render gun
+		SDL_SetRenderDrawColor( renderer, 200, 100, 200, 255 );
+		SDL_RenderDrawLine(renderer, mx, my, gun->x, gun ->y);
+		//filledCircleRGBA(renderer, gun->x, gun->y, 10, 200, 10, 10, target->rgb.a);
 
 		//moveCircleTrajectory(target);
 		//moveCircle(target);
