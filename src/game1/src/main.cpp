@@ -69,6 +69,8 @@ struct Circle {
 	Position p;
 	int r = 5; // radius
 	RGB rgb;
+    bool collided = false;
+    int collision_render_count = 0; // track number of render cycles after collision
 };
 
 struct PositionRelative {
@@ -89,7 +91,7 @@ public:
     int width = 50;
 };
 
-void addRipple(std::shared_ptr<std::vector<std::shared_ptr<Ripple>>> cs, int const& x = 20, int const& y = 80, int const& r = 100, int const& g = 200, int const& b = 200, int const& a = 200, int const& expand_speed = 5, int const& width = 50) {
+void addRipple(std::shared_ptr<std::vector<std::shared_ptr<Ripple>>> cs, int const& x = 20, int const& y = 80, int const& r = 100, int const& g = 200, int const& b = 100, int const& a = 200, int const& expand_speed = 2, int const& width = 50) {
     //cout << " in addCircle(). x: " << x << " y: " << y << endl;
 	std::shared_ptr<Ripple> c = std::make_shared<Ripple>();
 	c->p.x = x;
@@ -268,6 +270,17 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer){
     return true;
 } 
 
+bool isCollided(std::shared_ptr<Circle> c1, std::shared_ptr<Circle> c2){
+    int dx = c1->p.x - c2->p.x;
+    int dy = c1->p.y - c2->p.y;
+    int distance = sqrt(dx * dx + dy * dy);
+
+    if (distance < c1->r + c2->r) {
+        // collision detected!
+        return true;
+    } 
+    return false;
+} 
 
 
 int main(int, char**){
@@ -393,7 +406,13 @@ int main(int, char**){
             if (c->r <= SCREEN_WIDTH)// this can be improved
                 remaining_ripples->emplace_back(c);
         }
-        ripples = remaining_ripples;
+        //reset ripples as remaining_ripples and clear r
+        ripples->clear();
+        for ( std::shared_ptr<Ripple> &rr : *remaining_ripples )
+        {
+            ripples->emplace_back(rr);
+        }
+        remaining_ripples->clear();
         //cout << "RIPPLES: " << ripples->size() << endl;
 
         //grow ripple cricles
@@ -412,25 +431,56 @@ int main(int, char**){
 		}
 		bullets = new_bullets;
 
+        bool collision = false;
+		for( std::shared_ptr<MovingCircle> &b : *bullets ) {
+            for( std::shared_ptr<Ripple> &r : *ripples ) {
+                collision = isCollided(b, r);
+                if (collision){
+                    std::cout << "Collision!" << std::endl;
+                    b->collided = true;
+                    b->collision_render_count += 1;
+                    r->collided = true;
+                    r->collision_render_count += 1;
+                }
+            }
+        }
+
         //render ripple cricles
         for( std::shared_ptr<Ripple> &c : *ripples )
         {
             SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
-            int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
-            if (res == -1) 
+            if ( ! c->collided ) {
+                int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
+                if (res == -1) 
                 cout << "=========== render ripple ERROR res: " << res << endl;
             //cout << " size Ripple grid relative" << c->grid_relative.size() << endl;
-            //draw grid circles inside ripple width ripple color
+            } else { //draw as collided and update
+                    int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, 200, 100, 100, c->rgb.a);
+                    SDL_SetRenderDrawColor(renderer, 200, 200, 50, 200);
+                    //filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, 230, 10, 10, 255);
+                    c->collision_render_count += 1; 
+            }
+            if (c->collision_render_count < 20) {
+                remaining_ripples->emplace_back(c);
+            }
+            //draw edge grid circles inside ripple width ripple color
             for (auto p : c->grid_relative)
             {
                 //cout << "distance: " << p->distance << " radius: " << c->r << endl;
                 if (p->distance < c->r && c->r - p->distance < c->width)
                 {
                     SDL_SetRenderDrawColor(renderer, 200, 200, 50, 200);
-                    filledCircleRGBA(renderer, p->circle->p.x, p->circle->p.y, p->circle->r, 230, 10, 10, 255);
+                    //filledCircleRGBA(renderer, p->circle->p.x, p->circle->p.y, p->circle->r, 230, 10, 10, 255);
                 }
             }
         }
+        ripples->clear();
+        for ( std::shared_ptr<Ripple> &rr : *remaining_ripples )
+        {
+            ripples->emplace_back(rr);
+        }
+        remaining_ripples->clear();
+
 		//Render bullets
 		for( std::shared_ptr<MovingCircle> &c : *bullets ) {
 			SDL_SetRenderDrawColor( renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
