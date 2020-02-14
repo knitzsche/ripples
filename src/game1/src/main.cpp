@@ -249,29 +249,15 @@ void addBullet(std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> cs, s
     return;
 }
 
-void wrap(shared_ptr<MovingCircle> t) {
-    int xmove = t->p.x - t->prevP.x;
-    if (t->p.x >= SCREEN_HEIGHT) {
-        t->p.x = SCREEN_HEIGHT - t->p.x + (t->p.x - t->prevP.x) - SCREEN_HEIGHT + t->p.x;
-    }
-}
-
-void moveCircle(std::shared_ptr<MovingCircle> t) {
-    t->prevP.y = t->p.y;
-    t->p.y = t->p.y+1;
-    wrap(t);
-}
-
 void growRipple(std::shared_ptr<Ripple> t) {
     t->r = t->r + t->expand_speed;
-    //wrap(t);
 }
 
 double getDistanceMove(shared_ptr<MovingCircle> c) {
     return sqrt(pow((c->p.x - c->prevP.x), 2) + pow((c->p.y - c->prevP.y), 2));
 }
 
-void moveCircleTrajectory(std::shared_ptr<MovingCircle> c, bool wrap) {
+void moveCircle(std::shared_ptr<MovingCircle> c, bool wrap) {
     Position next;
     double deltaX = c->p.x - c->prevP.x;
     double deltaY = c->p.y - c->prevP.y;
@@ -284,27 +270,29 @@ void moveCircleTrajectory(std::shared_ptr<MovingCircle> c, bool wrap) {
         c->p.y = next.y;
         return;
     }
-
     //horiz wrap if needed
     if (next.x >= SCREEN_WIDTH) {
-        int moved = SCREEN_HEIGHT - c->p.x;
-        int left = deltaX - moved;
-        c->p.x = left;
-        c->prevP.x = -moved;
+        c->p.x = SCREEN_WIDTH - c->p.x;
+        c->prevP.x = c->p.x - deltaX;
+    } else if (next.x <= 0) {
+        c->p.x = SCREEN_WIDTH + next.x;
+        c->prevP.x = c->p.x - deltaX;
     } else {
         c->prevP.x = c->p.x;
         c->p.x = next.x;
     }
     // vertical wrpa if needed
     if (next.y >= SCREEN_HEIGHT) {
-        int moved = SCREEN_HEIGHT - c->p.y;
-        int left = deltaY - moved;
-        c->p.y = left;
-        c->prevP.y = -moved;
+        c->p.y = SCREEN_HEIGHT - c->p.y;
+        c->prevP.y = c->p.y - deltaY;
+    } else if (next.y <= 0) {
+        c->p.y = SCREEN_HEIGHT + next.y;
+        c->prevP.y = c->p.y - deltaY;
     } else {
         c->prevP.y = c->p.y;
         c->p.y = next.y;
     }
+
     return;
 }
 
@@ -438,7 +426,7 @@ int main(int, char**) {
         SDL_SetRenderDrawColor( renderer, 200,20,20, 255 );
         filledCircleRGBA(renderer, gun->x, gun->y, 5, 200, 20, 20, 255);
 
-        if ( idx % 25 == 0 ) {
+        if ( idx % 25 == 0 && idx < 500) {
             int x, y;
             x = rand() % SCREEN_WIDTH/2;
             x = x+SCREEN_WIDTH/2;
@@ -512,15 +500,14 @@ int main(int, char**) {
         //move ripple cricles
         for( std::shared_ptr<MovingCircle> &c : *ripples )
         {
-            //moveCircle(c);
-            moveCircleTrajectory(c,true);
+            moveCircle(c,true);
             //growRipple(c);
         }
 
         //move bullets
         shared_ptr<vector<shared_ptr<MovingCircle>>> new_bullets = make_shared<vector<shared_ptr<MovingCircle>>>();
         for( std::shared_ptr<MovingCircle> &c : *bullets ) {
-            moveCircleTrajectory(c,false);
+            moveCircle(c,false);
             if (c->p.x < SCREEN_WIDTH && c->p.x > 0 && c->p.y < SCREEN_HEIGHT && c->p.y > 0 ) {
                 new_bullets->emplace_back(c); // keep if still on screen
             }
