@@ -81,17 +81,16 @@ struct PositionRelative {
 class  MovingCircle : public Circle {
 public:
     Position prevP;
-    double prevY;
 };
 
-class  Ripple : public Circle {
+class  Ripple : public MovingCircle {
 public:
     int expand_speed;
     vector<shared_ptr<PositionRelative>> grid_relative;
     int width = 50;
 };
 
-void addRipple(std::shared_ptr<std::vector<std::shared_ptr<Ripple>>> cs, int const& x = 20, int const& y = 80, int const& r = 100, int const& g = 200, int const& b = 100, int const& a = 200, int const& expand_speed = 2, int const& width = 50) {
+void addRipple(std::shared_ptr<std::vector<std::shared_ptr<Ripple>>> cs, int const& x = 20, int const& y = 80, int const& r = 100, int const& g = 200, int const& b = 100, int const& a = 200, int const& expand_speed = 1, int const& width = 50) {
     //cout << " in addCircle(). x: " << x << " y: " << y << endl;
     std::shared_ptr<Ripple> c = std::make_shared<Ripple>();
     c->p.x = x;
@@ -135,41 +134,133 @@ void addCircle(std::shared_ptr<std::vector<std::shared_ptr<Circle>>> cs, int x =
     cs->emplace_back(c);
 }
 
-void addMovingCircle(std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> cs) {
+void addMovingCircle(std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> cs, int x, int y) {
     std::shared_ptr<MovingCircle> c = std::make_shared<MovingCircle>();
-    c->p.x = 20;
-    c->prevP.x = 0;
-    c->p.y = 80;
-    c->prevP.y = 105;
+    int prevX = rand() % 3 + 1;
+    if (rand() % 2 == 0){ 
+        prevX=-prevX;
+    }
+    int prevY = rand() % 3 + 1;
+    if (rand() % 2 == 0){ 
+        prevY=-prevY;
+    }
+    c->r = 20;
+    c->p.x = x;
+    c->prevP.x = x-prevX;
+    c->p.y = y;
+    c->prevP.y = y-prevY;
+    c->rgb.r = 100;
+    c->rgb.g = 200;
+    c->rgb.b = 100;
+    c->rgb.a = 200;
     cs->emplace_back(c);
 }
 
 struct Gun {
     int x;
     int y;
+    int x2;
+    int y2;
+    int angle = 45; //degrees 
+    int length = 30; 
 };
 
-void addMovingCirclePrevious(std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> cs, std::shared_ptr<Gun> gun, double x, double y) {
-    std::shared_ptr<MovingCircle> c = std::make_shared<MovingCircle>();
-    c->p.x = gun->x;
-    //factor down
-    c->prevP.x = gun->x - ((gun->x - x)/4);
-    c->p.y = gun->y;
-    //factor down
-    c->prevP.y = gun->y - ((gun->y - y)/4);
-    c->rgb.b = 20;
-    c->rgb.g = 20;
-    c->rgb.r = 200;
-    c->rgb.a = 255;
-    cs->emplace_back(c);
+double getRad(double degree){
+    return degree * 3.1415/180;
 }
 
-void wrap(shared_ptr<Circle> t) {
-    if (t->p.x > SCREEN_WIDTH) {
-        t->p.x = 0;
+double getDeg(double radian){
+    return radian * 180/3.1415;
+}
+/*
+ * arg 2:
+ *        1 means clockwise (right arrow pressed)
+ *        2 means counterclockwise (left arrow preseed)
+ */
+void rotateGun(std::shared_ptr<Gun> g, int rotation){
+    // radians =  degrees * pi / 180 ; 
+    // opposite = sin(angle) * gun lengtth (hypot)
+    //adjacent = cos(angle) * hypt
+    int anglechange;
+    if (rotation == 1)
+        anglechange = -5;
+    else if (rotation == 2)
+        anglechange = 5; 
+    
+    std::cout << "start angle: " << g->angle << std::endl;
+    int newA = g->angle + anglechange; //minus because right arrow is clockwise and angle decreases i
+    //since angle of 0 is straight down and 90 is to the right
+    if (newA >= 360){
+        newA=newA-360;
     }
-    if (t->p.y > SCREEN_HEIGHT) {
-        t->p.y = 0;//TODO reconsider
+    if (newA <= 0){
+        newA=newA+360;
+    }
+    g->angle = newA;
+    std::cout << "      new angle: " << g->angle << std::endl;
+  
+    //rotate angle so it is less than 90 (lower right quadrant visually) 
+    int workingA = 0;
+    if (newA>= 0 && newA < 90)
+            workingA = newA;
+    else if (newA >= 90 && newA < 180)
+            workingA = newA - 90;
+    else if (newA >= 180 && newA < 270)
+            workingA = newA - 180;
+    else if (newA >= 270 && newA <= 360)
+            workingA = newA - 270;
+   
+    //get delta X and delta y
+    double rads = getRad(workingA); 
+    double deltaX = sin(rads) * g->length;
+    double deltaY = cos(rads) * g->length;
+ 
+ 
+    //rotate deltax & y back
+    if (newA >= 0 && newA < 90){
+            cout << "---- less than 90" << endl;
+            g->x2 = g->x + deltaX;
+            g->y2 = g->y + deltaY;
+    } else if (newA >= 90 && newA < 180){
+            cout << "---- 90 to 180" << endl;
+            g->x2 = g->x + deltaY;
+            g->y2 = g->y - deltaX;
+    } else if (newA >= 180 && newA < 270){
+            cout << "---- 180 to 270" << endl;
+            g->x2 = g->x - deltaX;
+            g->y2 = g->y - deltaY;
+    } else if (newA >= 270 && newA <= 360){
+            cout << "---- 270 to 360" << endl;
+            g->x2 = g->x - deltaY;
+            g->y2 = g->y + deltaX;
+    }
+    return;
+}
+
+void addBullet(std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> cs, std::shared_ptr<Gun> gun) {
+    cout << "====== in addBullet" << endl;
+    std::shared_ptr<MovingCircle> b = std::make_shared<MovingCircle>();
+    b->p.x = gun->x2;
+    b->p.y = gun->y2;
+    int deltaX = gun->x2 - gun->x; 
+    int deltaY = gun->y2 - gun->y; 
+    b->prevP.x = gun->x2 - (0.25 * deltaX);
+    b->prevP.y = gun->y2 - (0.25 * deltaY);
+
+    b->rgb.b = 20;
+    b->rgb.g = 20;
+    b->rgb.r = 200;
+    b->rgb.a = 255;
+    cs->emplace_back(b);
+
+    return;   
+}
+
+void wrap(shared_ptr<MovingCircle> t) {
+    int xmove = t->p.x - t->prevP.x;
+    if (t->p.x >= SCREEN_HEIGHT){
+        std::cout << "wrapping!" << std::endl;
+        t->p.x = SCREEN_HEIGHT - t->p.x + (t->p.x - t->prevP.x) - SCREEN_HEIGHT + t->p.x;
     }
 }
 
@@ -188,33 +279,42 @@ double getDistanceMove(shared_ptr<MovingCircle> c) {
     return sqrt(pow((c->p.x - c->prevP.x), 2) + pow((c->p.y - c->prevP.y), 2));
 }
 
-pair<Position, Position> getNextPosition(shared_ptr<MovingCircle> c) {
-    Position p;
-    Position prevP;
-    double velocy = c->p.y - c->prevP.y;
-    //int deltaY; deltaY =int((velocy) + (0.5 * g));
-    double deltaY = velocy; // use this for straight
-    //double deltaY = velocy + 0.5; // comment this in for trajectory
+void moveCircleTrajectory(std::shared_ptr<MovingCircle> c, bool wrap) {
+    Position next;
     double deltaX = c->p.x - c->prevP.x;
-    //# set the new position
-    prevP.x = c->p.x;
-    prevP.y = c->p.y;
-    p.x = c->p.x + deltaX;
-    p.y = c->p.y + deltaY;
-
-    pair<Position, Position> ps (p, prevP);
-    // TODO wrap if needed
-    return ps;
-}
-
-void moveCircleTrajectory(std::shared_ptr<MovingCircle> c) {
-    getDistanceMove(c);
-    //cout << c->p.x << "," << c->p.y << endl;
-    pair<Position, Position> ps = getNextPosition(c);
-    c->p.x = ps.first.x;
-    c->p.y = ps.first.y;
-    c->prevP.x = ps.second.x;
-    c->prevP.y = ps.second.y;
+    double deltaY = c->p.y - c->prevP.y;
+    next.x = c->p.x + deltaX;
+    next.y = c->p.y + deltaY;
+    if (!wrap) {
+        c->prevP.x = c->p.x;
+        c->p.x = next.x;
+        c->prevP.y = c->p.y;
+        c->p.y = next.y;
+        return;
+    } 
+    
+    //horiz wrap if needed
+    if (next.x >= SCREEN_WIDTH){
+        //std::cout << "horizontal wrap" << std::endl;
+        int moved = SCREEN_HEIGHT - c->p.x;
+        int left = deltaX - moved;
+        c->p.x = left;
+        c->prevP.x = -moved;
+    } else {
+        c->prevP.x = c->p.x;
+        c->p.x = next.x;
+    }
+    // vertical wrpa if needed
+    if (next.y >= SCREEN_HEIGHT){
+        //std::cout << "vertical wrap" << std::endl;
+        int moved = SCREEN_HEIGHT - c->p.y;
+        int left = deltaY - moved;
+        c->p.y = left;
+        c->prevP.y = -moved;
+    } else {
+        c->prevP.y = c->p.y;
+        c->p.y = next.y;
+    }
     return;
 }
 
@@ -284,6 +384,7 @@ bool isCollided(std::shared_ptr<Circle> c1, std::shared_ptr<Circle> c2) {
 
 
 int main(int, char**) {
+    srand(time(0));
 
     //setScreen();
     SDL_Window *window = SDL_CreateWindow("Ripples",
@@ -303,18 +404,13 @@ int main(int, char**) {
         return 1;
     }
 
-    RGB bg;
-    bg.r = 20;
-    bg.g = 20;
-    bg.b = 20;
-    bg.a = 255;
-
     std::shared_ptr<Gun> gun = std::make_shared<Gun>();
+    gun->angle = 0;
+    gun-> length = 50;
     gun->x = 200;
-    gun->y = SCREEN_HEIGHT - 200;
-
-    // vector of dynamically created rectangles
-    //std::shared_ptr<std::vector<std::shared_ptr<SDL_Rect>>> rects = std::make_shared<std::vector<std::shared_ptr<SDL_Rect>>>();
+    //gun->x2 = gun->x+35;
+    gun->y = SCREEN_HEIGHT/2;
+    //gun->y2 = gun->y+35;
 
     // vector of moving bullets
     std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> bullets = std::make_shared<std::vector<std::shared_ptr<MovingCircle>>>();
@@ -323,19 +419,16 @@ int main(int, char**) {
     std::shared_ptr<std::vector<std::shared_ptr<Circle>>> grid_circles = std::make_shared<std::vector<std::shared_ptr<Circle>>>();
 
     // vector of ripples circles
-    std::shared_ptr<std::vector<std::shared_ptr<Ripple>>> ripples = std::make_shared<std::vector<std::shared_ptr<Ripple>>>();
+    std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> ripples = std::make_shared<std::vector<std::shared_ptr<MovingCircle>>>();
+    //std::shared_ptr<std::vector<std::shared_ptr<Ripple>>> ripples = std::make_shared<std::vector<std::shared_ptr<Ripple>>>();
 
     int x_iters = int(SCREEN_WIDTH/20);
     int y_iters = int(SCREEN_HEIGHT/20);
-    //cout << "x_iters: " << x_iters  << endl;
-    //cout << "y_itrd: " << y_iters << endl;
     int  grid = 20;
     for ( int x=0; x <= x_iters; ++x)
     {
         for (int y=0; y <= y_iters; ++y)
         {
-            //cout << "x: " << x << endl;
-            //cout << "y: " << y << endl;
             addCircle(grid_circles, x * grid, y * grid, 200,200,200, 50);
         }
     }
@@ -344,17 +437,31 @@ int main(int, char**) {
     bool quit = false;
     int mx = gun->x - 40;
     int my = gun->y + 40;
+    rotateGun(gun,1);
 
+    int idx = -1;
     while (!quit) {
+        idx += 1;
         clock_t startTime = clock();
-        //cout << "start time: " << startTime << endl;;
-        //cout << "clocks per sec: " << CLOCKS_PER_SEC << endl;
-        //1000000 clocks per second.
-        //float ellapsedSecs = (float)startTime/CLOCKS_PER_SEC;
-        //cout << "elapsed: " << ellapsedSecs << endl;;
 
-        SDL_SetRenderDrawColor( renderer, bg.r, bg.g, bg.b, 255 );
+        SDL_SetRenderDrawColor( renderer, 20,20,20, 255 );
         SDL_RenderClear(renderer);
+            
+        SDL_SetRenderDrawColor( renderer, 200,20,20, 255 );
+        filledCircleRGBA(renderer, gun->x, gun->y, 5, 200, 20, 20, 255);
+
+        if ( idx % 25 == 0 ) {
+                int x, y;
+                x = rand() % SCREEN_WIDTH/2;
+                x = x+SCREEN_WIDTH/2;
+                y = rand() % SCREEN_HEIGHT/2;
+                x = y+SCREEN_HEIGHT/2;
+                //SDL_GetMouseState(&x, &y);
+                addMovingCircle(ripples, x, y);
+        }
+
+
+        //check for user iput
         while (SDL_PollEvent(&e)) {
             // user closes the window
             if (e.type == SDL_QUIT) {
@@ -362,12 +469,15 @@ int main(int, char**) {
             }
             // user clicks the mouse
             if (e.type == SDL_MOUSEBUTTONDOWN) {
-                addRipple(ripples, e.button.x, e.button.y);
-                addGridToRipple((*ripples->back()), (*grid_circles));
+                int x, y;
+                SDL_GetMouseState(&x, &y);
+                //addMovingCircle(ripples, x, y);
+                std::cout << "added moving circle" << std::endl;
+                std::cout << "x,y: " << e.tfinger.x << "," << e.tfinger.y << std::endl;
             }
             if (e.type == SDL_FINGERDOWN) {
-                addRipple(ripples, e.tfinger.x, e.tfinger.y);
-                addGridToRipple((*ripples->back()), (*grid_circles));
+                //addRipple(ripples, e.tfinger.x, e.tfinger.y);
+                //addGridToRipple((*ripples->back()), (*grid_circles));
             }
             // user presses any key
             if (e.type == SDL_KEYDOWN) {
@@ -375,24 +485,20 @@ int main(int, char**) {
                 //cout << "key: " << SDL_GetKeyName(e.key.keysym.sym) << endl;
                 if (e.key.keysym.scancode == SDL_SCANCODE_LEFT) {
                     mx -= amt;
+                    rotateGun(gun,2);
                 } else if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
                     mx += amt;
+                    rotateGun(gun,1);
                 } else if (e.key.keysym.scancode == SDL_SCANCODE_UP) {
                     my -= amt;
                 } else if (e.key.keysym.scancode == SDL_SCANCODE_DOWN) {
                     my += amt;
                 } else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                    addMovingCirclePrevious(bullets, gun, mx, my);
+                    addBullet(bullets, gun);
                 } else if (e.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
                     quit = true;
                 }
             }
-            /*
-            	//std::cout << " MOUSE MOTION. x: " << e.motion.x << std::endl;
-            	mx = e.motion.x; my = e.motion.y;
-            	//std::cout << " MM res: " << res << std::endl;
-            }
-            */
         }
 
         //render grid cricles
@@ -400,35 +506,35 @@ int main(int, char**) {
             SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
             int res = filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
             if (res == -1)
-                cout << "=========== render grid circles ERROR res: " << res << endl;
+                cout << "render grid circles ERROR res: " << res << endl;
         }
 
         // reset ripples to exclude those that have expanded too much
-        std::shared_ptr<std::vector<std::shared_ptr<Ripple>>> remaining_ripples = std::make_shared<std::vector<std::shared_ptr<Ripple>>>();
-        for( std::shared_ptr<Ripple> &c : *ripples )
+        std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> remaining_ripples = std::make_shared<std::vector<std::shared_ptr<MovingCircle>>>();
+        for( std::shared_ptr<MovingCircle> &c : *ripples )
         {
             if (c->r <= SCREEN_WIDTH)// this can be improved
                 remaining_ripples->emplace_back(c);
         }
-        //reset ripples as remaining_ripples and clear r
         ripples->clear();
-        for ( std::shared_ptr<Ripple> &rr : *remaining_ripples )
+        for ( std::shared_ptr<MovingCircle> &rr : *remaining_ripples )
         {
             ripples->emplace_back(rr);
         }
         remaining_ripples->clear();
-        //cout << "RIPPLES: " << ripples->size() << endl;
 
-        //grow ripple cricles
-        for( std::shared_ptr<Ripple> &c : *ripples )
+        //move ripple cricles
+        for( std::shared_ptr<MovingCircle> &c : *ripples )
         {
-            growRipple(c);
+            //moveCircle(c);
+            moveCircleTrajectory(c,true);
+            //growRipple(c);
         }
 
         //move bullets
         shared_ptr<vector<shared_ptr<MovingCircle>>> new_bullets = make_shared<vector<shared_ptr<MovingCircle>>>();
         for( std::shared_ptr<MovingCircle> &c : *bullets ) {
-            moveCircleTrajectory(c);
+            moveCircleTrajectory(c,false);
             if (c->p.x < SCREEN_WIDTH && c->p.x > 0 && c->p.y < SCREEN_HEIGHT && c->p.y > 0 ) {
                 new_bullets->emplace_back(c); // keep if still on screen
             }
@@ -437,10 +543,10 @@ int main(int, char**) {
 
         bool collision = false;
         for( std::shared_ptr<MovingCircle> &b : *bullets ) {
-            for( std::shared_ptr<Ripple> &r : *ripples ) {
+            for( std::shared_ptr<MovingCircle> &r : *ripples ) {
                 collision = isCollided(b, r);
                 if (collision) {
-                    std::cout << "Collision!" << std::endl;
+                    //std::cout << "Collision!" << std::endl;
                     b->collided = true;
                     b->collision_render_count += 1;
                     r->collided = true;
@@ -450,7 +556,7 @@ int main(int, char**) {
         }
 
         //render ripple cricles
-        for( std::shared_ptr<Ripple> &c : *ripples )
+        for( std::shared_ptr<MovingCircle> &c : *ripples )
         {
             SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
             if ( ! c->collided ) {
@@ -467,19 +573,9 @@ int main(int, char**) {
             if (c->collision_render_count < 20) {
                 remaining_ripples->emplace_back(c);
             }
-            //draw edge grid circles inside ripple width ripple color
-            for (auto p : c->grid_relative)
-            {
-                //cout << "distance: " << p->distance << " radius: " << c->r << endl;
-                if (p->distance < c->r && c->r - p->distance < c->width)
-                {
-                    SDL_SetRenderDrawColor(renderer, 200, 200, 50, 200);
-                    //filledCircleRGBA(renderer, p->circle->p.x, p->circle->p.y, p->circle->r, 230, 10, 10, 255);
-                }
-            }
         }
         ripples->clear();
-        for ( std::shared_ptr<Ripple> &rr : *remaining_ripples )
+        for ( std::shared_ptr<MovingCircle> &rr : *remaining_ripples )
         {
             ripples->emplace_back(rr);
         }
@@ -496,11 +592,8 @@ int main(int, char**) {
 
         // render gun
         SDL_SetRenderDrawColor( renderer, 200, 100, 200, 255 );
-        SDL_RenderDrawLine(renderer, mx, my, gun->x, gun ->y);
-        //filledCircleRGBA(renderer, gun->x, gun->y, 10, 200, 10, 10, target->rgb.a);
+        SDL_RenderDrawLine(renderer, gun->x, gun->y, gun->x2, gun->y2);
 
-        //moveCircleTrajectory(target);
-        //moveCircle(target);
         //Update the screen
         SDL_RenderPresent(renderer);
         //SDL_Delay(10);
