@@ -137,11 +137,11 @@ void addCircle(std::shared_ptr<std::vector<std::shared_ptr<Circle>>> cs, int x =
 void addMovingCircle(std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> cs, int x, int y) {
     std::shared_ptr<MovingCircle> c = std::make_shared<MovingCircle>();
     int prevX = rand() % 3 + 1;
-    if (rand() % 2 == 0){ 
+    if (rand() % 2 == 0) {
         prevX=-prevX;
     }
     int prevY = rand() % 3 + 1;
-    if (rand() % 2 == 0){ 
+    if (rand() % 2 == 0) {
         prevY=-prevY;
     }
     c->r = 20;
@@ -161,15 +161,15 @@ struct Gun {
     int y;
     int x2;
     int y2;
-    int angle = 45; //degrees 
-    int length = 30; 
+    int angle = 45; //degrees
+    int length = 30;
 };
 
-double getRad(double degree){
+double getRad(double degree) {
     return degree * 3.1415/180;
 }
 
-double getDeg(double radian){
+double getDeg(double radian) {
     return radian * 180/3.1415;
 }
 /*
@@ -177,73 +177,66 @@ double getDeg(double radian){
  *        1 means clockwise (right arrow pressed)
  *        2 means counterclockwise (left arrow preseed)
  */
-void rotateGun(std::shared_ptr<Gun> g, int rotation){
-    // radians =  degrees * pi / 180 ; 
+void rotateGun(std::shared_ptr<Gun> g, int rotation) {
+    // radians =  degrees * pi / 180 ;
     // opposite = sin(angle) * gun lengtth (hypot)
     //adjacent = cos(angle) * hypt
     int anglechange;
     if (rotation == 1)
         anglechange = -5;
     else if (rotation == 2)
-        anglechange = 5; 
-    
-    std::cout << "start angle: " << g->angle << std::endl;
+        anglechange = 5;
+
     int newA = g->angle + anglechange; //minus because right arrow is clockwise and angle decreases i
     //since angle of 0 is straight down and 90 is to the right
-    if (newA >= 360){
+    if (newA >= 360) {
         newA=newA-360;
     }
-    if (newA <= 0){
+    if (newA <= 0) {
         newA=newA+360;
     }
     g->angle = newA;
-    std::cout << "      new angle: " << g->angle << std::endl;
-  
-    //rotate angle so it is less than 90 (lower right quadrant visually) 
+
+    //rotate angle so it is less than 90 (lower right quadrant visually)
     int workingA = 0;
     if (newA>= 0 && newA < 90)
-            workingA = newA;
+        workingA = newA;
     else if (newA >= 90 && newA < 180)
-            workingA = newA - 90;
+        workingA = newA - 90;
     else if (newA >= 180 && newA < 270)
-            workingA = newA - 180;
+        workingA = newA - 180;
     else if (newA >= 270 && newA <= 360)
-            workingA = newA - 270;
-   
+        workingA = newA - 270;
+
     //get delta X and delta y
-    double rads = getRad(workingA); 
+    double rads = getRad(workingA);
     double deltaX = sin(rads) * g->length;
     double deltaY = cos(rads) * g->length;
- 
- 
+
+
     //rotate deltax & y back
-    if (newA >= 0 && newA < 90){
-            cout << "---- less than 90" << endl;
-            g->x2 = g->x + deltaX;
-            g->y2 = g->y + deltaY;
-    } else if (newA >= 90 && newA < 180){
-            cout << "---- 90 to 180" << endl;
-            g->x2 = g->x + deltaY;
-            g->y2 = g->y - deltaX;
-    } else if (newA >= 180 && newA < 270){
-            cout << "---- 180 to 270" << endl;
-            g->x2 = g->x - deltaX;
-            g->y2 = g->y - deltaY;
-    } else if (newA >= 270 && newA <= 360){
-            cout << "---- 270 to 360" << endl;
-            g->x2 = g->x - deltaY;
-            g->y2 = g->y + deltaX;
+    if (newA >= 0 && newA < 90) {
+        g->x2 = g->x + deltaX;
+        g->y2 = g->y + deltaY;
+    } else if (newA >= 90 && newA < 180) {
+        g->x2 = g->x + deltaY;
+        g->y2 = g->y - deltaX;
+    } else if (newA >= 180 && newA < 270) {
+        g->x2 = g->x - deltaX;
+        g->y2 = g->y - deltaY;
+    } else if (newA >= 270 && newA <= 360) {
+        g->x2 = g->x - deltaY;
+        g->y2 = g->y + deltaX;
     }
     return;
 }
 
 void addBullet(std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> cs, std::shared_ptr<Gun> gun) {
-    cout << "====== in addBullet" << endl;
     std::shared_ptr<MovingCircle> b = std::make_shared<MovingCircle>();
     b->p.x = gun->x2;
     b->p.y = gun->y2;
-    int deltaX = gun->x2 - gun->x; 
-    int deltaY = gun->y2 - gun->y; 
+    int deltaX = gun->x2 - gun->x;
+    int deltaY = gun->y2 - gun->y;
     b->prevP.x = gun->x2 - (0.25 * deltaX);
     b->prevP.y = gun->y2 - (0.25 * deltaY);
 
@@ -253,13 +246,12 @@ void addBullet(std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> cs, s
     b->rgb.a = 255;
     cs->emplace_back(b);
 
-    return;   
+    return;
 }
 
 void wrap(shared_ptr<MovingCircle> t) {
     int xmove = t->p.x - t->prevP.x;
-    if (t->p.x >= SCREEN_HEIGHT){
-        std::cout << "wrapping!" << std::endl;
+    if (t->p.x >= SCREEN_HEIGHT) {
         t->p.x = SCREEN_HEIGHT - t->p.x + (t->p.x - t->prevP.x) - SCREEN_HEIGHT + t->p.x;
     }
 }
@@ -291,11 +283,10 @@ void moveCircleTrajectory(std::shared_ptr<MovingCircle> c, bool wrap) {
         c->prevP.y = c->p.y;
         c->p.y = next.y;
         return;
-    } 
-    
+    }
+
     //horiz wrap if needed
-    if (next.x >= SCREEN_WIDTH){
-        //std::cout << "horizontal wrap" << std::endl;
+    if (next.x >= SCREEN_WIDTH) {
         int moved = SCREEN_HEIGHT - c->p.x;
         int left = deltaX - moved;
         c->p.x = left;
@@ -305,8 +296,7 @@ void moveCircleTrajectory(std::shared_ptr<MovingCircle> c, bool wrap) {
         c->p.x = next.x;
     }
     // vertical wrpa if needed
-    if (next.y >= SCREEN_HEIGHT){
-        //std::cout << "vertical wrap" << std::endl;
+    if (next.y >= SCREEN_HEIGHT) {
         int moved = SCREEN_HEIGHT - c->p.y;
         int left = deltaY - moved;
         c->p.y = left;
@@ -357,7 +347,8 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer) {
     }
     SDL_RendererInfo rinfo;
     SDL_GetRendererInfo(renderer, &rinfo);
-    std::cout << rinfo.name << std::endl;
+    //show runtime api (for example "opengl")
+    //std::cout << rinfo.name << std::endl;
 
     SDL_Surface *surface = SDL_GetWindowSurface(window);
     if (surface == nullptr) {
@@ -366,7 +357,6 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer) {
         SDL_Quit();
         return false;
     }
-
     return true;
 }
 
@@ -408,9 +398,7 @@ int main(int, char**) {
     gun->angle = 0;
     gun-> length = 50;
     gun->x = 200;
-    //gun->x2 = gun->x+35;
     gun->y = SCREEN_HEIGHT/2;
-    //gun->y2 = gun->y+35;
 
     // vector of moving bullets
     std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> bullets = std::make_shared<std::vector<std::shared_ptr<MovingCircle>>>();
@@ -446,18 +434,18 @@ int main(int, char**) {
 
         SDL_SetRenderDrawColor( renderer, 20,20,20, 255 );
         SDL_RenderClear(renderer);
-            
+
         SDL_SetRenderDrawColor( renderer, 200,20,20, 255 );
         filledCircleRGBA(renderer, gun->x, gun->y, 5, 200, 20, 20, 255);
 
         if ( idx % 25 == 0 ) {
-                int x, y;
-                x = rand() % SCREEN_WIDTH/2;
-                x = x+SCREEN_WIDTH/2;
-                y = rand() % SCREEN_HEIGHT/2;
-                x = y+SCREEN_HEIGHT/2;
-                //SDL_GetMouseState(&x, &y);
-                addMovingCircle(ripples, x, y);
+            int x, y;
+            x = rand() % SCREEN_WIDTH/2;
+            x = x+SCREEN_WIDTH/2;
+            y = rand() % SCREEN_HEIGHT/2;
+            x = y+SCREEN_HEIGHT/2;
+            //SDL_GetMouseState(&x, &y);
+            addMovingCircle(ripples, x, y);
         }
 
 
@@ -472,8 +460,6 @@ int main(int, char**) {
                 int x, y;
                 SDL_GetMouseState(&x, &y);
                 //addMovingCircle(ripples, x, y);
-                std::cout << "added moving circle" << std::endl;
-                std::cout << "x,y: " << e.tfinger.x << "," << e.tfinger.y << std::endl;
             }
             if (e.type == SDL_FINGERDOWN) {
                 //addRipple(ripples, e.tfinger.x, e.tfinger.y);
