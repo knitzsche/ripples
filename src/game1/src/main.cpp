@@ -187,8 +187,7 @@ void rotateGun(std::shared_ptr<Gun> g, int rotation) {
     else if (rotation == 2)
         anglechange = 5;
 
-    int newA = g->angle + anglechange; //minus because right arrow is clockwise and angle decreases i
-    //since angle of 0 is straight down and 90 is to the right
+    int newA = g->angle + anglechange;
     if (newA >= 360) {
         newA=newA-360;
     }
@@ -212,7 +211,6 @@ void rotateGun(std::shared_ptr<Gun> g, int rotation) {
     double rads = getRad(workingA);
     double deltaX = sin(rads) * g->length;
     double deltaY = cos(rads) * g->length;
-
 
     //rotate deltax & y back
     if (newA >= 0 && newA < 90) {
@@ -394,9 +392,8 @@ int main(int, char**) {
     // vector of grid circles
     std::shared_ptr<std::vector<std::shared_ptr<Circle>>> grid_circles = std::make_shared<std::vector<std::shared_ptr<Circle>>>();
 
-    // vector of ripples circles
+    // vector of "target" circles
     std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> ripples = std::make_shared<std::vector<std::shared_ptr<MovingCircle>>>();
-    //std::shared_ptr<std::vector<std::shared_ptr<Ripple>>> ripples = std::make_shared<std::vector<std::shared_ptr<Ripple>>>();
 
     int x_iters = int(SCREEN_WIDTH/20);
     int y_iters = int(SCREEN_HEIGHT/20);
@@ -426,16 +423,15 @@ int main(int, char**) {
         SDL_SetRenderDrawColor( renderer, 200,20,20, 255 );
         filledCircleRGBA(renderer, gun->x, gun->y, 5, 200, 20, 20, 255);
 
+        // add a new target circle every 25 cycles up to a limit
         if ( idx % 25 == 0 && idx < 500) {
             int x, y;
             x = rand() % SCREEN_WIDTH/2;
             x = x+SCREEN_WIDTH/2;
             y = rand() % SCREEN_HEIGHT/2;
             x = y+SCREEN_HEIGHT/2;
-            //SDL_GetMouseState(&x, &y);
             addMovingCircle(ripples, x, y);
         }
-
 
         //check for user iput
         while (SDL_PollEvent(&e)) {
@@ -536,7 +532,6 @@ int main(int, char**) {
                 int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
                 if (res == -1)
                     cout << "=========== render ripple ERROR res: " << res << endl;
-                //cout << " size Ripple grid relative" << c->grid_relative.size() << endl;
             } else { //draw as collided and update
                 int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, 200, 100, 100, c->rgb.a);
                 SDL_SetRenderDrawColor(renderer, 200, 200, 50, 200);
