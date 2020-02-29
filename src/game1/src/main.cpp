@@ -370,9 +370,9 @@ int main(int, char**) {
     SDL_Renderer *renderer;
 
     renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
-    cout << "tried to create accerlated renderer." << endl;
     if ( renderer == nullptr ) {
       cout << "Cannot create accerlated renderer. Using SW." << endl;
+      cout << "SDL error: " << SDL_GetError() << endl;
       renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
     }
     bool setupOK;
