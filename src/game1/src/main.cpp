@@ -320,10 +320,6 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer) {
     SDL_SetWindowFullscreen(window, SDL_TRUE);
     SDL_GL_CreateContext(window);
 
-    if (renderer == nullptr)
-    {
-        renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
-    }
 
     if (renderer == nullptr) {
         logSDLError(std::cout, "Error: nullprt to Renderer. Quitting");
@@ -338,6 +334,7 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer) {
 
     SDL_Surface *surface = SDL_GetWindowSurface(window);
     if (surface == nullptr) {
+	cout << SDL_GetError() << endl;
         logSDLError(std::cout, "Error: nullprt to surface");
         cleanup(window, renderer);
         SDL_Quit();
@@ -369,11 +366,15 @@ int main(int, char**) {
                                           SCREEN_WIDTH,
                                           SCREEN_HEIGHT,
                                           SDL_WINDOW_OPENGL);
-//SDL_WINDOW_OPENGL);
 
     SDL_Renderer *renderer;
-    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
 
+    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+    cout << "tried to create accerlated renderer." << endl;
+    if ( renderer == nullptr ) {
+      cout << "Cannot create accerlated renderer. Using SW." << endl;
+      renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
+    }
     bool setupOK;
     setupOK = setup(window, renderer);
     if ( !setupOK ) {
@@ -531,8 +532,8 @@ int main(int, char**) {
             SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
             if ( ! c->collided ) {
                 int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
-                if (res == -1)
-                    cout << "=========== render ripple ERROR res: " << res << endl;
+                //if (res == -1)
+                    //cout << "=========== render ripple ERROR res: " << res << endl;
             } else { //draw as collided and update
                 int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, 200, 100, 100, c->rgb.a);
                 if (res == -1)
