@@ -1,27 +1,47 @@
 name: ripples
-version: "2"
+version: "2.2"
 summary: Ripples game
 description: Make ripples by touching and clicking
 confinement: strict
 base: core18
 grade: stable
 
+layout:
+  /usr/lib/arm-linux-gnueabihf/libmirclient.so.9:
+    bind-file: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/libmirclient.so.9
+  /usr/share/X11/xkb:
+    bind: $SNAP/usr/share/X11/xkb
+  /usr/share/locale-langpack/C/LC_MESSAGES/libc.mo:
+    bind-file: $SNAP/usr/share/locale-langpack/en/LC_MESSAGES/libc.mo
+
+environment:
+  LD_LIBRARY_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/dri:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/mesa:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/mesa-gl:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/xorg:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pulseaudio/
+  LIBGL_DRIVERS_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/dri 
+  __EGL_VENDOR_LIBRARY_DIRS: $SNAP/etc/glvnd/egl_vendor.d:$SNAP/usr/share/glvnd/egl_vendor.d
+
 apps:
+  ripcore:
+    command: bin/ripcore.sh
+    plugs:
+      - opengl
+      - wayland
+      - network
+      - network-bind
+      - network-control
+      - x11
   run:
     command: bin/ripples
-    environment:
-      LD_LIBRARY_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/dri:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/mesa:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/mesa-gl:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/xorg:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pulseaudio/
-      LIBGL_DRIVERS_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/dri 
-      #adapter: full
     plugs:
-     - opengl
-     - wayland
-     - network
-     - network-bind
-     - network-control
-     - x11
-
+      - opengl
+      - wayland
+      - network
+      - network-bind
+      - network-control
+      - x11
 parts:
+  ripcore:
+    source: launch
+    plugin: dump
   ripples:
     plugin: cmake
     source: src/
@@ -33,11 +53,31 @@ parts:
       - pkg-config
       - libsdl2-dev
       - libsdl2-gfx-dev
+  neededpkgs:
+    plugin: nil
     stage-packages:
-      - libsdl2-2.0-0
-      - libsdl2-gfx-1.0-0
+      - libasound2
+      - libasyncns0
+      - libbsd0
+      - libdbus-1-3
       - libdri2-1
       - libdrm2
-      - libgles2-mesa
+      - libffi6
+      - libflac8
+      - libgcrypt20
       - libgl1-mesa-glx
+      - libgles2-mesa
+      - libgpg-error0
+      - liblzma5
+      - libmirclient9
+      - libogg0
+      - libpcre3
       - libpulse0
+      - libsdl2-2.0-0
+      - libsdl2-gfx-1.0-0
+      - libsndfile1
+      - libsndio6.1
+      - libwayland-egl1-mesa
+  locale:
+     source: locale
+     plugin: dump

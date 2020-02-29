@@ -313,11 +313,11 @@ void cleanup(SDL_Renderer * renderer) {
 bool setup(SDL_Window * window, SDL_Renderer *renderer) {
 
     if (window == nullptr) {
-        logSDLError(std::cout, "CreateWindow");
+        logSDLError(std::cout, "Error: nullptr to window. Quitting.");
         SDL_Quit();
         return false;
     }
-
+    SDL_SetWindowFullscreen(window, SDL_TRUE);
     SDL_GL_CreateContext(window);
 
     if (renderer == nullptr)
@@ -326,7 +326,7 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer) {
     }
 
     if (renderer == nullptr) {
-        logSDLError(std::cout, "CreateRenderer");
+        logSDLError(std::cout, "Error: nullprt to Renderer. Quitting");
         cleanup(window);
         SDL_Quit();
         return false;
@@ -334,11 +334,11 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer) {
     SDL_RendererInfo rinfo;
     SDL_GetRendererInfo(renderer, &rinfo);
     //show runtime api (for example "opengl")
-    //std::cout << rinfo.name << std::endl;
+    std::cout << rinfo.name << std::endl;
 
     SDL_Surface *surface = SDL_GetWindowSurface(window);
     if (surface == nullptr) {
-        logSDLError(std::cout, "CreateSurface");
+        logSDLError(std::cout, "Error: nullprt to surface");
         cleanup(window, renderer);
         SDL_Quit();
         return false;
@@ -369,9 +369,10 @@ int main(int, char**) {
                                           SCREEN_WIDTH,
                                           SCREEN_HEIGHT,
                                           SDL_WINDOW_OPENGL);
+//SDL_WINDOW_OPENGL);
 
     SDL_Renderer *renderer;
-    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
 
     bool setupOK;
     setupOK = setup(window, renderer);
@@ -534,6 +535,8 @@ int main(int, char**) {
                     cout << "=========== render ripple ERROR res: " << res << endl;
             } else { //draw as collided and update
                 int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, 200, 100, 100, c->rgb.a);
+                if (res == -1)
+                    cout << "=========== render ripple ERROR res: " << res << endl;
                 SDL_SetRenderDrawColor(renderer, 200, 200, 50, 200);
                 //filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, 230, 10, 10, 255);
                 c->collision_render_count += 1;
