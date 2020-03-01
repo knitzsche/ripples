@@ -33,6 +33,9 @@ using namespace std;
 int SCREEN_WIDTH  = 1280;
 int SCREEN_HEIGHT = 720;
 
+/**
+ * setScreen sets the screen to full size of the current display
+ */
 void setScreen() {
     SDL_DisplayMode DM;
     SDL_GetCurrentDisplayMode(0, &DM);
@@ -108,7 +111,7 @@ double getDistance(Position const& p1, Position const& p2) {
     return sqrt(pow((p2.x - p1.x), 2) + pow((p2.y - p1.y), 2));
 }
 
-/*
+/**
  * calculate distances from ripple origin to all grid points
  */
 void addGridToRipple(Ripple &r, vector<shared_ptr<Circle>> const& grid) {
@@ -172,7 +175,8 @@ double getRad(double degree) {
 double getDeg(double radian) {
     return radian * 180/3.1415;
 }
-/*
+/**
+ * rotateGun rotatees the gun, currently by 5 degrees
  * arg 2:
  *        1 means clockwise (right arrow pressed)
  *        2 means counterclockwise (left arrow preseed)
@@ -307,46 +311,9 @@ void cleanup(SDL_Renderer * renderer) {
     SDL_DestroyRenderer(renderer);
 }
 
-/*
- * Setup window and renderer
- */
-bool setup(SDL_Window *window, SDL_Renderer *renderer) {
-
-    if (window == nullptr) {
-        logSDLError(std::cout, "Error: nullptr to window. Quitting.");
-        SDL_Quit();
-        return false;
-    }
-
-    cout << "====1" << endl;
-    SDL_SetWindowFullscreen(window, SDL_TRUE);
-    cout << "====2" << endl;
-    SDL_GL_CreateContext(window);
-
-    cout << "====3" << endl;
-    if (renderer == nullptr) {
-        logSDLError(std::cout, "Error: nullprt to Renderer. Quitting");
-        cleanup(window);
-        SDL_Quit();
-        return false;
-    }
-    SDL_RendererInfo rinfo;
-    SDL_GetRendererInfo(renderer, &rinfo);
-    //show runtime api (for example "opengl")
-    std::cout << rinfo.name << std::endl;
-
-    SDL_Surface *surface = SDL_GetWindowSurface(window);
-    if (surface == nullptr) {
-	cout << SDL_GetError() << endl;
-        logSDLError(std::cout, "Error: nullprt to surface");
-	cout << SDL_GetError() << endl;
-        cleanup(window, renderer);
-        SDL_Quit();
-        return false;
-    }
-    return true;
-}
-
+/**
+ * isCollided returns true if the first Circle is collided with the second
+ */ 
 bool isCollided(std::shared_ptr<Circle> c1, std::shared_ptr<Circle> c2) {
     int dx = c1->p.x - c2->p.x;
     int dy = c1->p.y - c2->p.y;
@@ -359,12 +326,24 @@ bool isCollided(std::shared_ptr<Circle> c1, std::shared_ptr<Circle> c2) {
     return false;
 }
 
-
 int main(int argc, char** argv) {
-   
+  
     std::string arg1;	
+    std::string arg2;	
     if (argc > 1){
       arg1 = argv[1];
+    }
+
+    if (argc > 2){
+      arg2 = argv[2];
+    }
+
+    if (arg1 == "help" || arg1 == "--help" || arg1 == "-h" ){
+      cout << "Args: " << endl;
+      cout << "  SW: selects sofware renderer. HW may be used anyway if available." << endl;
+      cout << "  info: shows renderer info and quits," << endl;
+      cout << "  window: tries to run in window, not full screen, if possible" << endl; 
+      exit(1);
     }
 
     srand(time(0));
@@ -373,8 +352,9 @@ int main(int argc, char** argv) {
       fprintf(stderr, "SDL failed to initialise: %s\n", SDL_GetError());
       return 1;
     }
-    cout << "SDL_GetNumVideoDisplays(): " <<  SDL_GetNumVideoDisplays() << endl;
-    //setScreen();
+   
+    setScreen(); 
+
     SDL_Window *window = NULL;
     window  = SDL_CreateWindow("Ripples",
                                SDL_WINDOWPOS_CENTERED,
@@ -384,19 +364,17 @@ int main(int argc, char** argv) {
                                SDL_WINDOW_OPENGL);
     SDL_Renderer *renderer;
 
+    if ( arg1 == "partial" )
+	SDL_SetWindowFullscreen(window, SDL_TRUE);
+    
     if (window == nullptr) {
         logSDLError(std::cout, "Error: nullptr to window. Quitting.");
         cleanup(window);
         SDL_Quit();
         return false;
-    }
+    } 
 
-    cout << "====1" << endl;
-    SDL_SetWindowFullscreen(window, SDL_TRUE);
-    cout << "====2" << endl;
     SDL_GL_CreateContext(window);
-
-    SDL_RendererInfo rinfo;
  
     if ( arg1 == "SW") {
       cout << "Creating SW renderr." << endl;
@@ -412,9 +390,6 @@ int main(int argc, char** argv) {
       SDL_Quit();
     }
 
-    SDL_GetRendererInfo(renderer, &rinfo);
-
-    cout << "====3" << endl;
     if (renderer == nullptr) {
         logSDLError(std::cout, "Error: nullprt to Renderer. Quitting");
         cleanup(window);
@@ -422,27 +397,18 @@ int main(int argc, char** argv) {
         return false;
     }
 
-    //show runtime api (for example "opengl")
-    std::cout << rinfo.name << std::endl;
-
-    SDL_Surface *surface = SDL_GetWindowSurface(window);
-    if (surface == nullptr) {
-	cout << SDL_GetError() << endl;
-        logSDLError(std::cout, "Error: nullprt to surface");
-	cout << SDL_GetError() << endl;
-        cleanup(window, renderer);
+    //show runtime api (for example "opengl" or "opengles2" for pi)
+    if ( arg1 == "info" || arg2 == "info" ){
+        SDL_RendererInfo rinfo;
+        SDL_GetRendererInfo(renderer, &rinfo);
+	cout << "Renderer info: " << endl;
+        cout << "  Name: " << rinfo.name << endl;
+        cout << "  Flags: " << rinfo.flags << endl;
         SDL_Quit();
         return false;
     }
 
-
-    //bool setupOK;
-    //setupOK = setup(window, renderer);
-    //if ( !setupOK ) {
-    //    std::cout << "SDL setup error. Quitting" << std::endl;
-    //   return 1;
-    //}
-
+    // set up the gun
     std::shared_ptr<Gun> gun = std::make_shared<Gun>();
     gun->angle = 0;
     gun-> length = 50;
@@ -484,7 +450,8 @@ int main(int argc, char** argv) {
         SDL_RenderClear(renderer);
 
         SDL_SetRenderDrawColor( renderer, 200,20,20, 255 );
-        filledCircleRGBA(renderer, gun->x, gun->y, 5, 200, 20, 20, 255);
+        
+	filledCircleRGBA(renderer, gun->x, gun->y, 5, 200, 20, 20, 255);
 
         // add a new target circle every 25 cycles up to a limit
         if ( idx % 25 == 0 && idx < 500) {
@@ -534,14 +501,15 @@ int main(int argc, char** argv) {
             }
         }
 
+	//This is too costly/time consuming for the pi3, even with HW renderer 
         //render grid cricles
-        for( std::shared_ptr<Circle> &c : *grid_circles ) {
+/*        for( std::shared_ptr<Circle> &c : *grid_circles ) {
             SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
             int res = filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
             if (res == -1)
                 cout << "render grid circles ERROR res: " << res << endl;
         }
-
+*/
         // reset ripples to exclude those that have expanded too much
         std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> remaining_ripples = std::make_shared<std::vector<std::shared_ptr<MovingCircle>>>();
         for( std::shared_ptr<MovingCircle> &c : *ripples )
@@ -574,7 +542,7 @@ int main(int argc, char** argv) {
         bullets = new_bullets;
 
         bool collision = false;
-        for( std::shared_ptr<MovingCircle> &b : *bullets ) {
+	for( std::shared_ptr<MovingCircle> &b : *bullets ) {
             for( std::shared_ptr<MovingCircle> &r : *ripples ) {
                 collision = isCollided(b, r);
                 if (collision) {
@@ -631,9 +599,9 @@ int main(int argc, char** argv) {
         SDL_RenderPresent(renderer);
         //SDL_Delay(10);
         clock_t endTime = clock();
-        clock_t ellapsedTime = endTime - startTime;
+        clock_t ellapsedTime = clock() - startTime;
         float ellapsed = (float)ellapsedTime/CLOCKS_PER_SEC;
-        //cout << "elapsed time: " << ellapsed << endl;;
+        //cout << "elapsed time: " << ellapsed << endl;
         if (ellapsed < 0.0333) // 30 franmes per second
             SDL_Delay(0.0333 - ellapsed);
     }
