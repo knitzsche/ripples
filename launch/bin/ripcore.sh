@@ -2,7 +2,6 @@
 
 set -e
 
-echo "Running launch script."
 # Create $XDG_RUNTIME_DIR if not exists (to be removed when LP: #1738197 is fixed)
 [ -n "$XDG_RUNTIME_DIR" ] && mkdir -p $XDG_RUNTIME_DIR -m 700
 
@@ -32,7 +31,6 @@ if [ ! -S "$wayland_snappath" ]; then
   fi
 
   # if running under wayland, use it
-  #export WAYLAND_DEBUG=1
   # create the compat symlink for now
   if [ ! -e "$wayland_snappath" ]; then
     ln -s "$wayland_sockpath" "$wayland_snappath"
