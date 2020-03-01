@@ -310,17 +310,20 @@ void cleanup(SDL_Renderer * renderer) {
 /*
  * Setup window and renderer
  */
-bool setup(SDL_Window * window, SDL_Renderer *renderer) {
+bool setup(SDL_Window *window, SDL_Renderer *renderer) {
 
     if (window == nullptr) {
         logSDLError(std::cout, "Error: nullptr to window. Quitting.");
         SDL_Quit();
         return false;
     }
+
+    cout << "====1" << endl;
     SDL_SetWindowFullscreen(window, SDL_TRUE);
+    cout << "====2" << endl;
     SDL_GL_CreateContext(window);
 
-
+    cout << "====3" << endl;
     if (renderer == nullptr) {
         logSDLError(std::cout, "Error: nullprt to Renderer. Quitting");
         cleanup(window);
@@ -336,6 +339,7 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer) {
     if (surface == nullptr) {
 	cout << SDL_GetError() << endl;
         logSDLError(std::cout, "Error: nullprt to surface");
+	cout << SDL_GetError() << endl;
         cleanup(window, renderer);
         SDL_Quit();
         return false;
@@ -356,31 +360,88 @@ bool isCollided(std::shared_ptr<Circle> c1, std::shared_ptr<Circle> c2) {
 }
 
 
-int main(int, char**) {
+int main(int argc, char** argv) {
+   
+    std::string arg1;	
+    if (argc > 1){
+      arg1 = argv[1];
+    }
+
     srand(time(0));
-
+    
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+      fprintf(stderr, "SDL failed to initialise: %s\n", SDL_GetError());
+      return 1;
+    }
+    cout << "SDL_GetNumVideoDisplays(): " <<  SDL_GetNumVideoDisplays() << endl;
     //setScreen();
-    SDL_Window *window = SDL_CreateWindow("Ripples",
-                                          SDL_WINDOWPOS_CENTERED,
-                                          SDL_WINDOWPOS_CENTERED,
-                                          SCREEN_WIDTH,
-                                          SCREEN_HEIGHT,
-                                          SDL_WINDOW_OPENGL);
-
+    SDL_Window *window = NULL;
+    window  = SDL_CreateWindow("Ripples",
+                               SDL_WINDOWPOS_CENTERED,
+                               SDL_WINDOWPOS_CENTERED,
+                               SCREEN_WIDTH,
+                               SCREEN_HEIGHT,
+                               SDL_WINDOW_OPENGL);
     SDL_Renderer *renderer;
 
-    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
-    if ( renderer == nullptr ) {
-      cout << "Cannot create accerlated renderer. Using SW." << endl;
-      cout << "SDL error: " << SDL_GetError() << endl;
+    if (window == nullptr) {
+        logSDLError(std::cout, "Error: nullptr to window. Quitting.");
+        cleanup(window);
+        SDL_Quit();
+        return false;
+    }
+
+    cout << "====1" << endl;
+    SDL_SetWindowFullscreen(window, SDL_TRUE);
+    cout << "====2" << endl;
+    SDL_GL_CreateContext(window);
+
+    SDL_RendererInfo rinfo;
+ 
+    if ( arg1 == "SW") {
+      cout << "Creating SW renderr." << endl;
       renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
+    } else {
+      cout << "Creating HW renderr." << endl;
+      renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
     }
-    bool setupOK;
-    setupOK = setup(window, renderer);
-    if ( !setupOK ) {
-        std::cout << "SDL setup error. Quitting" << std::endl;
-        return 1;
+    if ( renderer == nullptr ) {
+      cout << "nullptr to renderer" << endl;
+      cout << "SDL error: " << SDL_GetError() << endl;
+      cleanup(window);
+      SDL_Quit();
     }
+
+    SDL_GetRendererInfo(renderer, &rinfo);
+
+    cout << "====3" << endl;
+    if (renderer == nullptr) {
+        logSDLError(std::cout, "Error: nullprt to Renderer. Quitting");
+        cleanup(window);
+        SDL_Quit();
+        return false;
+    }
+
+    //show runtime api (for example "opengl")
+    std::cout << rinfo.name << std::endl;
+
+    SDL_Surface *surface = SDL_GetWindowSurface(window);
+    if (surface == nullptr) {
+	cout << SDL_GetError() << endl;
+        logSDLError(std::cout, "Error: nullprt to surface");
+	cout << SDL_GetError() << endl;
+        cleanup(window, renderer);
+        SDL_Quit();
+        return false;
+    }
+
+
+    //bool setupOK;
+    //setupOK = setup(window, renderer);
+    //if ( !setupOK ) {
+    //    std::cout << "SDL setup error. Quitting" << std::endl;
+    //   return 1;
+    //}
 
     std::shared_ptr<Gun> gun = std::make_shared<Gun>();
     gun->angle = 0;

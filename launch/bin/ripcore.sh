@@ -44,5 +44,6 @@ while [ "$(cat /run/user/0/wayland-0 2>&1|sed 's/.*: //')" = "Permission denied"
     echo "Please run snap connect $SNAP_NAME:wayland mir-kiosk:wayland"
     sleep 10
 done
-
-$SNAP/bin/ripples
+export MESA_GL_VERSION_OVERRIDE=3.3
+export MESA_GLSL_VERSION_OVERRIDE=330
+$SNAP/bin/ripples $@
