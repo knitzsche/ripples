@@ -27,6 +27,8 @@
 
 #include <SDL.h>
 #include <SDL2_gfxPrimitives.h> //install libsdl2-gfx-dev
+#include <wayland-client.h>
+#include "SDL_syswm.h"
 
 using namespace std;
 
@@ -361,17 +363,44 @@ bool isCollided(std::shared_ptr<Circle> c1, std::shared_ptr<Circle> c2) {
 
 int main(int, char**) {
     srand(time(0));
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_SysWMinfo info;
+            //Create window
+    SDL_Window *window = SDL_CreateWindow( "Ripples", SDL_WINDOWPOS_UNDEFINED,
+				   SDL_WINDOWPOS_UNDEFINED, 0,
+				   0, SDL_WINDOW_OPENGL);
+    if( window == NULL ){
+        printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
+    }
 
+    //SDL_SetWindowFullscreen(window, windowed ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP); 
+
+//    SDL_Window *window = SDL_CreateWindow("", 0, 0, 0, 0, SDL_WINDOW_OPENGL || SDL_WINDOW_FULLSCREEN);
     //setScreen();
-    SDL_Window *window = SDL_CreateWindow("Ripples",
+    /*SDL_Window *window = SDL_CreateWindow("Ripples",
                                           SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED,
                                           SCREEN_WIDTH,
                                           SCREEN_HEIGHT,
                                           SDL_WINDOW_OPENGL);
+    */
+    if (SDL_GetWindowWMInfo(window,&info)) {
+      /* success */
+      if (info.subsystem == SDL_SYSWM_WAYLAND) {
+        printf("Is Wayland\n");
 
+        struct wl_display* display = info.info.wl.display;
+        struct wl_surface* surface = info.info.wl.surface;
+        struct wl_shell_surface* shell_surface = info.info.wl.shell_surface;
+        // and do whatever you want with the Wayland stuff
+      } else {
+        printf("Not a Wayland system\n");
+      }
+    } else {
+      printf("Failed to get WM info\n");
+    }
     SDL_Renderer *renderer;
-    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
 
     bool setupOK;
     setupOK = setup(window, renderer);

@@ -1,0 +1,85 @@
+name: ripples
+version: "3"
+summary: Ripples game
+description: Make ripples by touching and clicking
+confinement: strict
+base: core20
+grade: stable
+
+plugs:
+  graphics-core20:
+    interface: content
+    target: $SNAP/graphics
+    default-provider: mesa-core20
+layout:
+  /usr/share/X11/xkb:
+    bind: $SNAP/usr/share/X11/xkb
+  /etc/glvnd:
+    bind: $SNAP/etc/glvnd
+  /usr/lib/${SNAPCRAFT_ARCH_TRIPLET}/dri:
+    bind: $SNAP/graphics/dri
+  /usr/share/glvnd:
+    bind: $SNAP/graphics/glvnd
+
+environment:
+  SDL_VIDEODRIVER: wayland
+  LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/graphics/dri:$SNAP/graphics/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/xorg:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pulseaudio
+  LIBGL_DRIVERS_PATH: $SNAP/graphics/dri
+  __EGL_VENDOR_LIBRARY_DIRS: $SNAP/graphics/glvnd/egl_vendor.d
+  EGL_PLATFORM: wayland
+  EGL_LOG_LEVEL: debug
+  XKB_CONFIG_DATA: $SNAP/usr/share/X11/xkb
+apps:
+  daemon:
+    daemon: simple
+    #restart-condition: always
+    command-chain:
+      - bin/run-daemon
+      - bin/wayland-launch
+    command: daemon.sh
+    plugs:
+     - opengl
+     - wayland
+     - network
+     - network-bind
+     - network-control
+     - x11
+  run:
+    command: usr/local/bin/ripples
+    plugs:
+     - opengl
+     - wayland
+     - network
+     - network-bind
+     - network-control
+     - x11
+
+parts:
+  mir-kiosk-snap-launch:
+    plugin: dump
+    source: https://github.com/MirServer/mir-kiosk-snap-launch.git
+    override-build:  $SNAPCRAFT_PART_BUILD/build-with-plugs.sh opengl wayland graphics-core20
+  launchers:
+    source: launchers
+    plugin: dump
+  ripples:
+    plugin: cmake
+    source: src/
+    build-packages:
+      - build-essential
+      - cmake
+      - g++
+      - libgles2-mesa-dev
+      - pkg-config
+      - libsdl2-dev
+      - libsdl2-gfx-dev
+    stage-packages:
+      - libsdl2-2.0-0
+      - libsdl2-gfx-1.0-0
+      - libdri2-1
+      - libdrm2
+      - libgles2-mesa
+      - libgl1-mesa-glx
+      - libpulse0
+      - xkb-data
+      - libglu1-mesa
