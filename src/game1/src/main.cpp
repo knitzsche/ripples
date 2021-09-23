@@ -47,7 +47,6 @@ void get_info(){
            linked.major, linked.minor, linked.patch);
 }
 
-
 int SCREEN_WIDTH  = 1280;
 int SCREEN_HEIGHT = 720;
 
@@ -328,46 +327,6 @@ void cleanup(SDL_Renderer * renderer) {
     SDL_DestroyRenderer(renderer);
 }
 
-/*
- * Setup window and renderer
- */
-bool setup(SDL_Window * window, SDL_Renderer *renderer) {
-
-    if (window == nullptr) {
-        logSDLError(cout, "CreateWindow");
-        SDL_Quit();
-        return false;
-    }
-
-    SDL_GL_CreateContext(window);
-
-    if (renderer == nullptr)
-    {
-        renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
-    }
-
-    if (renderer == nullptr) {
-        logSDLError(cout, "CreateRenderer");
-        cleanup(window);
-        SDL_Quit();
-        return false;
-    }
-    SDL_RendererInfo rinfo;
-    SDL_GetRendererInfo(renderer, &rinfo);
-    //show runtime api (for example "opengl")
-    //cout << rinfo.name << endl;
-
-    /*SDL_Surface *surface = SDL_GetWindowSurface(window);
-    if (surface == nullptr) {
-        logSDLError(cout, "CreateSurface");
-        cleanup(window, renderer);
-        SDL_Quit();
-        return false;
-    }
-    */
-    return true;
-}
-
 bool isCollided(shared_ptr<Circle> c1, shared_ptr<Circle> c2) {
     int dx = c1->p.x - c2->p.x;
     int dy = c1->p.y - c2->p.y;
@@ -383,7 +342,8 @@ bool isCollided(shared_ptr<Circle> c1, shared_ptr<Circle> c2) {
 
 int main(int argc, char *argv[]) {
     bool quit = false;
-    int delay = 0;
+    int delay = 0; // per iter delay to adjust for current system
+
     if (argc == 2 ){
         if (strcmp(argv[1], "info") == 0){
             get_info();
@@ -394,27 +354,26 @@ int main(int argc, char *argv[]) {
     }
 
     srand(time(0));
+
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_SysWMinfo info;
-    //Create window
-    //SDL_Window *window = SDL_CreateWindow( "Ripples", SDL_WINDOWPOS_UNDEFINED,
-    /*
-    SDL_Window *window = SDL_CreateWindow( "Ripples", 
-		                   SDL_WINDOWPOS_CENTERED,
-                                   SDL_WINDOWPOS_CENTERED,
-				   0, 0,
-				   SDL_WINDOW_OPENGL);
+    SDL_Window *window;
+    SDL_Renderer *renderer;
+
+    window  = SDL_CreateWindow( "Ripples", 
+                                SDL_WINDOWPOS_CENTERED,
+                                SDL_WINDOWPOS_CENTERED,
+                                SCREEN_WIDTH,
+                                SCREEN_HEIGHT,
+                                SDL_WINDOW_FULLSCREEN||SDL_WINDOW_OPENGL);
     if( window == NULL ){
         printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
+        return false;
+    } else {
+        printf("Window created.\n");
     }
-    */
     setScreen();
-    SDL_Window *window = SDL_CreateWindow("Ripples",
-                                          SDL_WINDOWPOS_CENTERED,
-                                          SDL_WINDOWPOS_CENTERED,
-                                          SCREEN_WIDTH,
-                                          SCREEN_HEIGHT,
-                                          SDL_WINDOW_OPENGL);
+     
+    SDL_SysWMinfo info;
 
     if (SDL_GetWindowWMInfo(window,&info)) {
       if (info.subsystem == SDL_SYSWM_WAYLAND) {
@@ -426,11 +385,9 @@ int main(int argc, char *argv[]) {
       printf("Unable to get Wayland window info. %s\n", SDL_GetError());
     }
     
-    SDL_Renderer *renderer;
     renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
 
-    bool setupOK = setup(window, renderer);
-    if ( !setupOK ) {
+    if ( window == nullptr || renderer == nullptr ) {
         cout << "SDL setup error. Quitting" << endl;
         return 1;
     }
@@ -630,8 +587,8 @@ int main(int argc, char *argv[]) {
             SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
             if ( ! c->collided ) {
                 int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
-                if (res == -1)
-                    cout << "=========== render ripple ERROR res: " << res << endl;
+                //if (res == -1)
+                //    cout << "=========== render ripple ERROR res: " << res << endl;
             } else { //draw as collided and update
                 int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, 200, 100, 100, c->rgb.a);
                 SDL_SetRenderDrawColor(renderer, 200, 200, 50, 200);
