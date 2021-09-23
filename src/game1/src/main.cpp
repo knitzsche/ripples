@@ -55,6 +55,9 @@ void addRect(std::shared_ptr<std::vector<std::shared_ptr<SDL_Rect>>> rs) {
     rs->emplace_back(r);
 }
 
+int last_aim = 0; // 0 up, 1 right, 2 down, 3 left
+
+
 struct Position {
     double x;
     double y;
@@ -338,13 +341,14 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer) {
     //show runtime api (for example "opengl")
     //std::cout << rinfo.name << std::endl;
 
-    SDL_Surface *surface = SDL_GetWindowSurface(window);
+    /*SDL_Surface *surface = SDL_GetWindowSurface(window);
     if (surface == nullptr) {
         logSDLError(std::cout, "CreateSurface");
         cleanup(window, renderer);
         SDL_Quit();
         return false;
     }
+    */
     return true;
 }
 
@@ -366,16 +370,16 @@ int main(int, char**) {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_SysWMinfo info;
             //Create window
-    SDL_Window *window = SDL_CreateWindow( "Ripples", SDL_WINDOWPOS_UNDEFINED,
-				   SDL_WINDOWPOS_UNDEFINED, 0,
-				   0, SDL_WINDOW_OPENGL);
+    //SDL_Window *window = SDL_CreateWindow( "Ripples", SDL_WINDOWPOS_UNDEFINED,
+    SDL_Window *window = SDL_CreateWindow( "Ripples", 
+		                   SDL_WINDOWPOS_CENTERED,
+                                   SDL_WINDOWPOS_CENTERED,
+				   0, 0,
+				   SDL_WINDOW_OPENGL);
     if( window == NULL ){
         printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
     }
 
-    //SDL_SetWindowFullscreen(window, windowed ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP); 
-
-//    SDL_Window *window = SDL_CreateWindow("", 0, 0, 0, 0, SDL_WINDOW_OPENGL || SDL_WINDOW_FULLSCREEN);
     //setScreen();
     /*SDL_Window *window = SDL_CreateWindow("Ripples",
                                           SDL_WINDOWPOS_CENTERED,
@@ -388,11 +392,6 @@ int main(int, char**) {
       /* success */
       if (info.subsystem == SDL_SYSWM_WAYLAND) {
         printf("Is Wayland\n");
-
-        struct wl_display* display = info.info.wl.display;
-        struct wl_surface* surface = info.info.wl.surface;
-        struct wl_shell_surface* shell_surface = info.info.wl.shell_surface;
-        // and do whatever you want with the Wayland stuff
       } else {
         printf("Not a Wayland system\n");
       }
@@ -400,7 +399,7 @@ int main(int, char**) {
       printf("Failed to get WM info\n");
     }
     SDL_Renderer *renderer;
-    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
+    renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
 
     bool setupOK;
     setupOK = setup(window, renderer);
@@ -442,6 +441,8 @@ int main(int, char**) {
     rotateGun(gun,1);
 
     int idx = -1;
+    // used to handle KEYUP/DOWN for aiming the gun
+    bool aim = false;
     while (!quit) {
         idx += 1;
         clock_t startTime = clock();
@@ -469,44 +470,93 @@ int main(int, char**) {
                 quit = true;
             }
             // user clicks the mouse
-            if (e.type == SDL_MOUSEBUTTONDOWN) {
+            /*if (e.type == SDL_MOUSEBUTTONDOWN) {
                 int x, y;
                 SDL_GetMouseState(&x, &y);
                 //addMovingCircle(ripples, x, y);
             }
-            if (e.type == SDL_FINGERDOWN) {
+	    */
+            //if (e.type == SDL_FINGERDOWN) {
                 //addRipple(ripples, e.tfinger.x, e.tfinger.y);
                 //addGridToRipple((*ripples->back()), (*grid_circles));
+            //}
+	    int amt = 8;
+            if (e.type == SDL_KEYUP) {
+              switch(e.key.keysym.scancode){
+                  case SDL_SCANCODE_LEFT:
+                      aim = false;
+                      break;
+                  case SDL_SCANCODE_RIGHT:
+                      aim = false;
+                      break;
+                  case SDL_SCANCODE_UP:
+                      aim = false;
+                      break;
+                  case SDL_SCANCODE_DOWN:
+                      aim = false;
+                      break;
+              }
             }
-            // user presses any key
-            if (e.type == SDL_KEYDOWN) {
-                int amt = 8;
-                //cout << "key: " << SDL_GetKeyName(e.key.keysym.sym) << endl;
-                if (e.key.keysym.scancode == SDL_SCANCODE_LEFT) {
+            if (aim){
+              switch (last_aim){
+                case 3:
                     mx -= amt;
                     rotateGun(gun,2);
-                } else if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
+                    last_aim = 3;
+                case 1:
                     mx += amt;
                     rotateGun(gun,1);
-                } else if (e.key.keysym.scancode == SDL_SCANCODE_UP) {
-                    my -= amt;
-                } else if (e.key.keysym.scancode == SDL_SCANCODE_DOWN) {
-                    my += amt;
-                } else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                    addBullet(bullets, gun);
-                } else if (e.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
-                    quit = true;
-                }
+                    last_aim = 1;
+                /*case 0:
+                    mx += amt;
+                    rotateGun(gun,1);
+                    last_aim = 1;
+                */
+
+              }
             }
+            
+            // else {
+                // user presses any key
+                if (e.type == SDL_KEYDOWN) {
+                    //amt = 8;
+                    std::cout << "key down: " << SDL_GetKeyName(e.key.keysym.sym) << endl;
+                    if (e.key.keysym.scancode == SDL_SCANCODE_LEFT) {
+                        mx -= amt;
+                        rotateGun(gun,2);
+                        last_aim = 3;
+                        aim = true;
+                    } else if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
+                        mx += amt;
+                        rotateGun(gun,1);
+                        last_aim = 1;
+                        aim = true;
+                    } else if (e.key.keysym.scancode == SDL_SCANCODE_UP) {
+                        my -= amt;
+                        last_aim = 0;
+                        aim = true;
+                    } else if (e.key.keysym.scancode == SDL_SCANCODE_DOWN) {
+                        my += amt;
+                        last_aim = 2;
+                        aim = true;
+                    } else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+                        addBullet(bullets, gun);
+                        aim = false;
+                    } else if (e.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+                        quit = true;
+                        aim = false;
+                    }
+                }
+	    //}
         }
 
-        //render grid cricles
-        for( std::shared_ptr<Circle> &c : *grid_circles ) {
+        //render grid cricles TTO SLOW FOR RPI3
+        /*for( std::shared_ptr<Circle> &c : *grid_circles ) {
             SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
             int res = filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
             if (res == -1)
                 cout << "render grid circles ERROR res: " << res << endl;
-        }
+        }*/
 
         // reset ripples to exclude those that have expanded too much
         std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> remaining_ripples = std::make_shared<std::vector<std::shared_ptr<MovingCircle>>>();
@@ -521,7 +571,7 @@ int main(int, char**) {
             ripples->emplace_back(rr);
         }
         remaining_ripples->clear();
-
+        
         //move ripple cricles
         for( std::shared_ptr<MovingCircle> &c : *ripples )
         {
