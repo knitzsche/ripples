@@ -27,7 +27,7 @@ environment:
   LIBGL_DRIVERS_PATH: $SNAP/graphics/dri
   __EGL_VENDOR_LIBRARY_DIRS: $SNAP/graphics/glvnd/egl_vendor.d
   EGL_PLATFORM: wayland
-  EGL_LOG_LEVEL: debug
+  #EGL_LOG_LEVEL: debug
   XKB_CONFIG_DATA: $SNAP/usr/share/X11/xkb
 apps:
   daemon:
@@ -45,6 +45,8 @@ apps:
      - network-control
      - x11
   run:
+    command-chain:
+      - bin/wayland-launch
     command: usr/local/bin/ripples
     plugs:
      - opengl
