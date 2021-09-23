@@ -1,5 +1,6 @@
 /**
- * Copyright (C) 2016 Kyle Nitzsche
+ *
+ * Copyright (C) 2021 Kyle Nitzsche
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License version 3 as
@@ -24,6 +25,7 @@
 #include <cmath>
 #include <ctime>
 #include <numeric>
+#include <cstdlib>
 
 #include <SDL.h>
 #include <SDL2_gfxPrimitives.h> //install libsdl2-gfx-dev
@@ -31,6 +33,20 @@
 #include "SDL_syswm.h"
 
 using namespace std;
+
+void get_info(){
+  SDL_WINDOW_OPENGL;
+  SDL_version compiled;
+  SDL_version linked;
+  SDL_VERSION(&compiled);
+  SDL_GetVersion(&linked);
+  printf("Info:\n");
+  printf("Compiled against SDL version %d.%d.%d ...\n",
+           compiled.major, compiled.minor, compiled.patch);
+  printf("Linked against SDL version %d.%d.%d.\n",
+           linked.major, linked.minor, linked.patch);
+}
+
 
 int SCREEN_WIDTH  = 1280;
 int SCREEN_HEIGHT = 720;
@@ -42,12 +58,12 @@ void setScreen() {
     SCREEN_HEIGHT = DM.h;
 }
 
-void logSDLError(std::ostream &os, const std::string &msg) {
-    os << msg << " error: " << SDL_GetError() << std::endl;
+void logSDLError(ostream &os, const string &msg) {
+    os << msg << " error: " << SDL_GetError() << endl;
 }
 
-void addRect(std::shared_ptr<std::vector<std::shared_ptr<SDL_Rect>>> rs) {
-    std::shared_ptr<SDL_Rect> r = std::make_shared<SDL_Rect>();
+void addRect(shared_ptr<vector<shared_ptr<SDL_Rect>>> rs) {
+    shared_ptr<SDL_Rect> r = make_shared<SDL_Rect>();
     r->x = 0;
     r->y = 0;
     r->w = 50;
@@ -95,9 +111,9 @@ public:
     int width = 50;
 };
 
-void addRipple(std::shared_ptr<std::vector<std::shared_ptr<Ripple>>> cs, int const& x = 20, int const& y = 80, int const& r = 100, int const& g = 200, int const& b = 100, int const& a = 200, int const& expand_speed = 1, int const& width = 50) {
+void addRipple(shared_ptr<vector<shared_ptr<Ripple>>> cs, int const& x = 20, int const& y = 80, int const& r = 100, int const& g = 200, int const& b = 100, int const& a = 200, int const& expand_speed = 1, int const& width = 50) {
     //cout << " in addCircle(). x: " << x << " y: " << y << endl;
-    std::shared_ptr<Ripple> c = std::make_shared<Ripple>();
+    shared_ptr<Ripple> c = make_shared<Ripple>();
     c->p.x = x;
     c->p.y = y;
     c->rgb.r = r;
@@ -127,9 +143,9 @@ void addGridToRipple(Ripple &r, vector<shared_ptr<Circle>> const& grid) {
     }
 }
 
-void addCircle(std::shared_ptr<std::vector<std::shared_ptr<Circle>>> cs, int x = 20, int y = 80, int r = 100, int g = 200, int b = 200, int a = 200) {
+void addCircle(shared_ptr<vector<shared_ptr<Circle>>> cs, int x = 20, int y = 80, int r = 100, int g = 200, int b = 200, int a = 200) {
     //cout << " in addCircle(). x: " << x << " y: " << y << endl;
-    std::shared_ptr<Circle> c = std::make_shared<Circle>();
+    shared_ptr<Circle> c = make_shared<Circle>();
     c->p.x = x;
     c->p.y = y;
     c->rgb.r = r;
@@ -139,8 +155,8 @@ void addCircle(std::shared_ptr<std::vector<std::shared_ptr<Circle>>> cs, int x =
     cs->emplace_back(c);
 }
 
-void addMovingCircle(std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> cs, int x, int y) {
-    std::shared_ptr<MovingCircle> c = std::make_shared<MovingCircle>();
+void addMovingCircle(shared_ptr<vector<shared_ptr<MovingCircle>>> cs, int x, int y) {
+    shared_ptr<MovingCircle> c = make_shared<MovingCircle>();
     int prevX = rand() % 3 + 1;
     if (rand() % 2 == 0) {
         prevX=-prevX;
@@ -182,7 +198,7 @@ double getDeg(double radian) {
  *        1 means clockwise (right arrow pressed)
  *        2 means counterclockwise (left arrow preseed)
  */
-void rotateGun(std::shared_ptr<Gun> g, int rotation) {
+void rotateGun(shared_ptr<Gun> g, int rotation) {
     // radians =  degrees * pi / 180 ;
     // opposite = sin(angle) * gun lengtth (hypot)
     //adjacent = cos(angle) * hypt
@@ -234,8 +250,8 @@ void rotateGun(std::shared_ptr<Gun> g, int rotation) {
     return;
 }
 
-void addBullet(std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> cs, std::shared_ptr<Gun> gun) {
-    std::shared_ptr<MovingCircle> b = std::make_shared<MovingCircle>();
+void addBullet(shared_ptr<vector<shared_ptr<MovingCircle>>> cs, shared_ptr<Gun> gun) {
+    shared_ptr<MovingCircle> b = make_shared<MovingCircle>();
     b->p.x = gun->x2;
     b->p.y = gun->y2;
     int deltaX = gun->x2 - gun->x;
@@ -252,7 +268,7 @@ void addBullet(std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> cs, s
     return;
 }
 
-void growRipple(std::shared_ptr<Ripple> t) {
+void growRipple(shared_ptr<Ripple> t) {
     t->r = t->r + t->expand_speed;
 }
 
@@ -260,7 +276,7 @@ double getDistanceMove(shared_ptr<MovingCircle> c) {
     return sqrt(pow((c->p.x - c->prevP.x), 2) + pow((c->p.y - c->prevP.y), 2));
 }
 
-void moveCircle(std::shared_ptr<MovingCircle> c, bool wrap) {
+void moveCircle(shared_ptr<MovingCircle> c, bool wrap) {
     Position next;
     double deltaX = c->p.x - c->prevP.x;
     double deltaY = c->p.y - c->prevP.y;
@@ -318,7 +334,7 @@ void cleanup(SDL_Renderer * renderer) {
 bool setup(SDL_Window * window, SDL_Renderer *renderer) {
 
     if (window == nullptr) {
-        logSDLError(std::cout, "CreateWindow");
+        logSDLError(cout, "CreateWindow");
         SDL_Quit();
         return false;
     }
@@ -331,7 +347,7 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer) {
     }
 
     if (renderer == nullptr) {
-        logSDLError(std::cout, "CreateRenderer");
+        logSDLError(cout, "CreateRenderer");
         cleanup(window);
         SDL_Quit();
         return false;
@@ -339,11 +355,11 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer) {
     SDL_RendererInfo rinfo;
     SDL_GetRendererInfo(renderer, &rinfo);
     //show runtime api (for example "opengl")
-    //std::cout << rinfo.name << std::endl;
+    //cout << rinfo.name << endl;
 
     /*SDL_Surface *surface = SDL_GetWindowSurface(window);
     if (surface == nullptr) {
-        logSDLError(std::cout, "CreateSurface");
+        logSDLError(cout, "CreateSurface");
         cleanup(window, renderer);
         SDL_Quit();
         return false;
@@ -352,7 +368,7 @@ bool setup(SDL_Window * window, SDL_Renderer *renderer) {
     return true;
 }
 
-bool isCollided(std::shared_ptr<Circle> c1, std::shared_ptr<Circle> c2) {
+bool isCollided(shared_ptr<Circle> c1, shared_ptr<Circle> c2) {
     int dx = c1->p.x - c2->p.x;
     int dy = c1->p.y - c2->p.y;
     int distance = sqrt(dx * dx + dy * dy);
@@ -365,12 +381,24 @@ bool isCollided(std::shared_ptr<Circle> c1, std::shared_ptr<Circle> c2) {
 }
 
 
-int main(int, char**) {
+int main(int argc, char *argv[]) {
+    bool quit = false;
+    int delay = 0;
+    if (argc == 2 ){
+        if (strcmp(argv[1], "info") == 0){
+            get_info();
+            quit = true;
+        } else {
+            delay = atoi(argv[1]);
+        }
+    }
+
     srand(time(0));
     SDL_Init(SDL_INIT_VIDEO);
     SDL_SysWMinfo info;
-            //Create window
+    //Create window
     //SDL_Window *window = SDL_CreateWindow( "Ripples", SDL_WINDOWPOS_UNDEFINED,
+    /*
     SDL_Window *window = SDL_CreateWindow( "Ripples", 
 		                   SDL_WINDOWPOS_CENTERED,
                                    SDL_WINDOWPOS_CENTERED,
@@ -379,49 +407,48 @@ int main(int, char**) {
     if( window == NULL ){
         printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
     }
-
-    //setScreen();
-    /*SDL_Window *window = SDL_CreateWindow("Ripples",
+    */
+    setScreen();
+    SDL_Window *window = SDL_CreateWindow("Ripples",
                                           SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED,
                                           SCREEN_WIDTH,
                                           SCREEN_HEIGHT,
                                           SDL_WINDOW_OPENGL);
-    */
+
     if (SDL_GetWindowWMInfo(window,&info)) {
-      /* success */
       if (info.subsystem == SDL_SYSWM_WAYLAND) {
         printf("Is Wayland\n");
       } else {
         printf("Not a Wayland system\n");
       }
     } else {
-      printf("Failed to get WM info\n");
+      printf("Unable to get Wayland window info. %s\n", SDL_GetError());
     }
+    
     SDL_Renderer *renderer;
     renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
 
-    bool setupOK;
-    setupOK = setup(window, renderer);
+    bool setupOK = setup(window, renderer);
     if ( !setupOK ) {
-        std::cout << "SDL setup error. Quitting" << std::endl;
+        cout << "SDL setup error. Quitting" << endl;
         return 1;
     }
 
-    std::shared_ptr<Gun> gun = std::make_shared<Gun>();
+    shared_ptr<Gun> gun = make_shared<Gun>();
     gun->angle = 0;
     gun-> length = 50;
     gun->x = 200;
     gun->y = SCREEN_HEIGHT/2;
 
     // vector of moving bullets
-    std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> bullets = std::make_shared<std::vector<std::shared_ptr<MovingCircle>>>();
+    shared_ptr<vector<shared_ptr<MovingCircle>>> bullets = make_shared<vector<shared_ptr<MovingCircle>>>();
 
     // vector of grid circles
-    std::shared_ptr<std::vector<std::shared_ptr<Circle>>> grid_circles = std::make_shared<std::vector<std::shared_ptr<Circle>>>();
+    shared_ptr<vector<shared_ptr<Circle>>> grid_circles = make_shared<vector<shared_ptr<Circle>>>();
 
     // vector of "target" circles
-    std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> ripples = std::make_shared<std::vector<std::shared_ptr<MovingCircle>>>();
+    shared_ptr<vector<shared_ptr<MovingCircle>>> ripples = make_shared<vector<shared_ptr<MovingCircle>>>();
 
     int x_iters = int(SCREEN_WIDTH/20);
     int y_iters = int(SCREEN_HEIGHT/20);
@@ -435,7 +462,6 @@ int main(int, char**) {
     }
 
     SDL_Event e;
-    bool quit = false;
     int mx = gun->x - 40;
     int my = gun->y + 40;
     rotateGun(gun,1);
@@ -480,7 +506,7 @@ int main(int, char**) {
                 //addRipple(ripples, e.tfinger.x, e.tfinger.y);
                 //addGridToRipple((*ripples->back()), (*grid_circles));
             //}
-	    int amt = 8;
+            int amt = 8;
             if (e.type == SDL_KEYUP) {
               switch(e.key.keysym.scancode){
                   case SDL_SCANCODE_LEFT:
@@ -515,43 +541,38 @@ int main(int, char**) {
 
               }
             }
-            
-            // else {
-                // user presses any key
-                if (e.type == SDL_KEYDOWN) {
-                    //amt = 8;
-                    std::cout << "key down: " << SDL_GetKeyName(e.key.keysym.sym) << endl;
-                    if (e.key.keysym.scancode == SDL_SCANCODE_LEFT) {
-                        mx -= amt;
-                        rotateGun(gun,2);
-                        last_aim = 3;
-                        aim = true;
-                    } else if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
-                        mx += amt;
-                        rotateGun(gun,1);
-                        last_aim = 1;
-                        aim = true;
-                    } else if (e.key.keysym.scancode == SDL_SCANCODE_UP) {
-                        my -= amt;
-                        last_aim = 0;
-                        aim = true;
-                    } else if (e.key.keysym.scancode == SDL_SCANCODE_DOWN) {
-                        my += amt;
-                        last_aim = 2;
-                        aim = true;
-                    } else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                        addBullet(bullets, gun);
-                        aim = false;
-                    } else if (e.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
-                        quit = true;
-                        aim = false;
-                    }
+            if (e.type == SDL_KEYDOWN) {
+                cout << "key down: " << SDL_GetKeyName(e.key.keysym.sym) << endl;
+                if (e.key.keysym.scancode == SDL_SCANCODE_LEFT) {
+                    mx -= amt;
+                    rotateGun(gun,2);
+                    last_aim = 3;
+                    aim = true;
+                } else if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
+                    mx += amt;
+                    rotateGun(gun,1);
+                    last_aim = 1;
+                    aim = true;
+                } else if (e.key.keysym.scancode == SDL_SCANCODE_UP) {
+                    my -= amt;
+                    last_aim = 0;
+                    aim = true;
+                } else if (e.key.keysym.scancode == SDL_SCANCODE_DOWN) {
+                    my += amt;
+                    last_aim = 2;
+                    aim = true;
+                } else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+                    addBullet(bullets, gun);
+                    aim = false;
+                } else if (e.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+                    quit = true;
+                    aim = false;
                 }
-	    //}
+            }
         }
 
         //render grid cricles TTO SLOW FOR RPI3
-        /*for( std::shared_ptr<Circle> &c : *grid_circles ) {
+        /*for( shared_ptr<Circle> &c : *grid_circles ) {
             SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
             int res = filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
             if (res == -1)
@@ -559,21 +580,21 @@ int main(int, char**) {
         }*/
 
         // reset ripples to exclude those that have expanded too much
-        std::shared_ptr<std::vector<std::shared_ptr<MovingCircle>>> remaining_ripples = std::make_shared<std::vector<std::shared_ptr<MovingCircle>>>();
-        for( std::shared_ptr<MovingCircle> &c : *ripples )
+        shared_ptr<vector<shared_ptr<MovingCircle>>> remaining_ripples = make_shared<vector<shared_ptr<MovingCircle>>>();
+        for( shared_ptr<MovingCircle> &c : *ripples )
         {
             if (c->r <= SCREEN_WIDTH)// this can be improved
                 remaining_ripples->emplace_back(c);
         }
         ripples->clear();
-        for ( std::shared_ptr<MovingCircle> &rr : *remaining_ripples )
+        for ( shared_ptr<MovingCircle> &rr : *remaining_ripples )
         {
             ripples->emplace_back(rr);
         }
         remaining_ripples->clear();
         
         //move ripple cricles
-        for( std::shared_ptr<MovingCircle> &c : *ripples )
+        for( shared_ptr<MovingCircle> &c : *ripples )
         {
             moveCircle(c,true);
             //growRipple(c);
@@ -581,7 +602,7 @@ int main(int, char**) {
 
         //move bullets
         shared_ptr<vector<shared_ptr<MovingCircle>>> new_bullets = make_shared<vector<shared_ptr<MovingCircle>>>();
-        for( std::shared_ptr<MovingCircle> &c : *bullets ) {
+        for( shared_ptr<MovingCircle> &c : *bullets ) {
             moveCircle(c,false);
             if (c->p.x < SCREEN_WIDTH && c->p.x > 0 && c->p.y < SCREEN_HEIGHT && c->p.y > 0 ) {
                 new_bullets->emplace_back(c); // keep if still on screen
@@ -590,11 +611,11 @@ int main(int, char**) {
         bullets = new_bullets;
 
         bool collision = false;
-        for( std::shared_ptr<MovingCircle> &b : *bullets ) {
-            for( std::shared_ptr<MovingCircle> &r : *ripples ) {
+        for( shared_ptr<MovingCircle> &b : *bullets ) {
+            for( shared_ptr<MovingCircle> &r : *ripples ) {
                 collision = isCollided(b, r);
                 if (collision) {
-                    //std::cout << "Collision!" << std::endl;
+                    //cout << "Collision!" << endl;
                     b->collided = true;
                     b->collision_render_count += 1;
                     r->collided = true;
@@ -604,7 +625,7 @@ int main(int, char**) {
         }
 
         //render ripple cricles
-        for( std::shared_ptr<MovingCircle> &c : *ripples )
+        for( shared_ptr<MovingCircle> &c : *ripples )
         {
             SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
             if ( ! c->collided ) {
@@ -622,14 +643,14 @@ int main(int, char**) {
             }
         }
         ripples->clear();
-        for ( std::shared_ptr<MovingCircle> &rr : *remaining_ripples )
+        for ( shared_ptr<MovingCircle> &rr : *remaining_ripples )
         {
             ripples->emplace_back(rr);
         }
         remaining_ripples->clear();
 
         //Render bullets
-        for( std::shared_ptr<MovingCircle> &c : *bullets ) {
+        for( shared_ptr<MovingCircle> &c : *bullets ) {
             SDL_SetRenderDrawColor( renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
 
             int res = filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
@@ -643,7 +664,7 @@ int main(int, char**) {
 
         //Update the screen
         SDL_RenderPresent(renderer);
-        //SDL_Delay(10);
+        SDL_Delay(delay);
         clock_t endTime = clock();
         clock_t ellapsedTime = endTime - startTime;
         float ellapsed = (float)ellapsedTime/CLOCKS_PER_SEC;
