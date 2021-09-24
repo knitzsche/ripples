@@ -20,6 +20,10 @@ layout:
     bind: $SNAP/graphics/dri
   /usr/share/glvnd:
     bind: $SNAP/graphics/glvnd
+  /usr/share/libdrm:
+    bind: $SNAP/graphics/libdrm
+  /usr/share/drirc.d:
+   bind: $SNAP/graphics/drirc.d
 
 environment:
   SDL_VIDEODRIVER: wayland
@@ -84,6 +88,3 @@ parts:
       - xkb-data
       - libgles2-mesa
       - libgl1-mesa-glx
-        #- libdri2-1
-        #- libdrm2
-        #- libglu1-mesa
