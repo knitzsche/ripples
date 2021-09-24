@@ -31,6 +31,7 @@
 #include <SDL2_gfxPrimitives.h> //install libsdl2-gfx-dev
 #include <wayland-client.h>
 #include "SDL_syswm.h"
+#include <SDL_ttf.h>
 
 using namespace std;
 
@@ -56,10 +57,6 @@ void setScreen() {
     SCREEN_HEIGHT = DM.h;
 }
 
-void logSDLError(ostream &os, const string &msg) {
-    os << msg << " error: " << SDL_GetError() << endl;
-}
-
 void addRect(shared_ptr<vector<shared_ptr<SDL_Rect>>> rs) {
     shared_ptr<SDL_Rect> r = make_shared<SDL_Rect>();
     r->x = 0;
@@ -68,9 +65,6 @@ void addRect(shared_ptr<vector<shared_ptr<SDL_Rect>>> rs) {
     r->h = 50;
     rs->emplace_back(r);
 }
-
-// used to keep rotating gun on arrow key hold down
-int last_aim = 0; // 0 up, 1 right, 2 down, 3 left
 
 struct Position {
     double x;
@@ -153,7 +147,8 @@ void addCircle(shared_ptr<vector<shared_ptr<Circle>>> cs, int x = 20, int y = 80
     cs->emplace_back(c);
 }
 
-void addMovingCircle(shared_ptr<vector<shared_ptr<MovingCircle>>> cs, int x, int y) {
+//shared_ptr<MovingCircle> addMovingCircle(shared_ptr<vector<shared_ptr<MovingCircle>>> cs, int x, int y) {
+shared_ptr<MovingCircle> addMovingCircle(shared_ptr<vector<shared_ptr<MovingCircle>>> cs, int x, int y) {
     shared_ptr<MovingCircle> c = make_shared<MovingCircle>();
     int prevX = rand() % 3 + 1;
     if (rand() % 2 == 0) {
@@ -173,6 +168,7 @@ void addMovingCircle(shared_ptr<vector<shared_ptr<MovingCircle>>> cs, int x, int
     c->rgb.b = 100;
     c->rgb.a = 200;
     cs->emplace_back(c);
+    return c;
 }
 
 struct Gun {
@@ -347,6 +343,31 @@ void help(){
   printf("See also README* in install directory.\n");
 }
 
+void message(SDL_Renderer *renderer, int x, int y, char *text,
+             TTF_Font *font, SDL_Texture **texture, SDL_Rect *rect) {
+    int text_width;
+    int text_height;
+    SDL_Surface *surface;
+    SDL_Color textColor = {255, 255, 255, 0};
+
+    surface = TTF_RenderText_Solid(font, text, textColor);
+    *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    text_width = surface->w;
+    text_height = surface->h;
+    SDL_FreeSurface(surface);
+    //SDL_DestroyTexture(&&texture);
+    rect->x = x;
+    rect->y = y;
+    rect->w = text_width;
+    rect->h = text_height;
+}
+
+//for onscreen text
+SDL_Rect rect1, rect2;
+SDL_Texture *texture1, *texture2;
+
+bool short_game = false; //use short flag to have short game
+
 int main(int argc, char *argv[]) {
     bool quit = false;
     int delay = 0; // per iter delay to adjust for current system
@@ -358,6 +379,8 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(argv[1], "help") == 0){
             help();
             return 1;
+        } else if (strcmp(argv[1], "short") == 0){
+            short_game = true;
         } else {
             delay = atoi(argv[1]);
         }
@@ -368,7 +391,6 @@ int main(int argc, char *argv[]) {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window *window;
     SDL_Renderer *renderer;
-
     window  = SDL_CreateWindow( "Ripples", 
                                 SDL_WINDOWPOS_CENTERED,
                                 SDL_WINDOWPOS_CENTERED,
@@ -388,11 +410,9 @@ int main(int argc, char *argv[]) {
     if (SDL_GetWindowWMInfo(window,&info)) {
       if (info.subsystem == SDL_SYSWM_WAYLAND) {
         printf("Is Wayland\n");
-      } else {
-        printf("Not a Wayland system\n");
       }
     } else {
-      printf("Unable to get Wayland window info. %s\n", SDL_GetError());
+      printf("Probably not a wayland system. Possible error. %s\n", SDL_GetError());
     }
     
     renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
@@ -400,6 +420,14 @@ int main(int argc, char *argv[]) {
     if ( window == nullptr || renderer == nullptr ) {
         cout << "SDL setup error. Quitting" << endl;
         return 1;
+    }
+
+    //onscreen text
+    TTF_Init();
+    TTF_Font *font = TTF_OpenFont("/usr/share/fonts/truetype/ubuntu/Ubuntu-C.ttf", 24);
+    if (font == NULL) {
+        fprintf(stderr, "error: font not found\n");
+        exit(EXIT_FAILURE);
     }
 
     shared_ptr<Gun> gun = make_shared<Gun>();
@@ -433,9 +461,13 @@ int main(int argc, char *argv[]) {
     int my = gun->y + 40;
     rotateGun(gun,1);
 
+    message(renderer, 10, 10, "Aim: left/right arrows. Shoot: space bar. Quit: ESC", font, &texture1, &rect1);
+    message(renderer, 50, 50, "Got them all!", font, &texture2, &rect2);
+
     int idx = -1;
     // used to handle KEYUP/DOWN for aiming the gun
     bool aim = false;
+    bool start = true;
     while (!quit) {
         idx += 1;
         clock_t startTime = clock();
@@ -445,17 +477,43 @@ int main(int argc, char *argv[]) {
 
         SDL_SetRenderDrawColor( renderer, 200,20,20, 255 );
         filledCircleRGBA(renderer, gun->x, gun->y, 5, 200, 20, 20, 255);
-
-        // add a new target circle every 25 cycles up to a limit
-        if ( idx % 25 == 0 && idx < 500) {
-            int x, y;
-            x = rand() % SCREEN_WIDTH/2;
-            x = x+SCREEN_WIDTH/2;
-            y = rand() % SCREEN_HEIGHT/2;
-            x = y+SCREEN_HEIGHT/2;
-            addMovingCircle(ripples, x, y);
+        int x, y;
+        shared_ptr<MovingCircle> target; 
+        //printf("%s\n", start ? "true" : "false");
+        //printf("Number ripples %d\n", ripples->size());
+        //printf("idx %d\n", idx);
+        if (start) {
+            // add a new target circle every 25 cycles up to a limit
+            if ( idx % 25 == 0 && idx < 500) {
+                x = rand() % SCREEN_WIDTH/2;
+                x = x+SCREEN_WIDTH/2;
+                y = rand() % SCREEN_HEIGHT/2;
+                x = y+SCREEN_HEIGHT/2;
+                target = addMovingCircle(ripples, x, y);
+            } else if ( !short_game && idx % 20 == 0 && idx >= 500 && idx < 1000) {
+                x = rand() % SCREEN_WIDTH/2;
+                x = x+SCREEN_WIDTH/2;
+                y = rand() % SCREEN_HEIGHT/2;
+                x = y+SCREEN_HEIGHT/2;
+                target = addMovingCircle(ripples, x, y);
+                target->rgb.r = 200;
+                target->rgb.g = 0;
+                target->rgb.b = 0;
+                target->rgb.a = 200;
+             } else if ( !short_game && idx % 10 == 0 && idx >= 1000 && idx < 1500) {
+                x = rand() % SCREEN_WIDTH/2;
+                x = x+SCREEN_WIDTH/2;
+                y = rand() % SCREEN_HEIGHT/2;
+                x = y+SCREEN_HEIGHT/2;
+                target = addMovingCircle(ripples, x, y);
+                target->rgb.r = 200;
+                target->rgb.g = 0;
+                target->rgb.b = 255;
+                target->rgb.a = 200;
+             } else if (idx == 1500){
+                start = false;
+            }
         }
-
         //check for user iput
         while (SDL_PollEvent(&e)) {
             // user closes the window
@@ -479,20 +537,16 @@ int main(int argc, char *argv[]) {
                 if (e.key.keysym.scancode == SDL_SCANCODE_LEFT) {
                     mx -= amt;
                     rotateGun(gun,2);
-                    last_aim = 3;
                     aim = true;
                 } else if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
                     mx += amt;
                     rotateGun(gun,1);
-                    last_aim = 1;
                     aim = true;
                 } else if (e.key.keysym.scancode == SDL_SCANCODE_UP) {
                     my -= amt;
-                    last_aim = 0;
                     aim = true;
                 } else if (e.key.keysym.scancode == SDL_SCANCODE_DOWN) {
                     my += amt;
-                    last_aim = 2;
                     aim = true;
                 } else if (e.key.keysym.scancode == SDL_SCANCODE_SPACE) {
                     addBullet(bullets, gun);
@@ -504,30 +558,16 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        //render grid cricles TO SLOW FOR RPI3
-        /*for( shared_ptr<Circle> &c : *grid_circles ) {
-            SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
-            int res = filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
-            if (res == -1)
-                cout << "render grid circles ERROR res: " << res << endl;
-        }*/
-
         // reset ripples to exclude those that have expanded too much
         shared_ptr<vector<shared_ptr<MovingCircle>>> remaining_ripples = make_shared<vector<shared_ptr<MovingCircle>>>();
 
-        for( shared_ptr<MovingCircle> &c : *ripples )
-        {
-            if (c->r <= SCREEN_WIDTH)// this can be improved
-                remaining_ripples->emplace_back(c);
-        }
-        ripples->clear();
         for ( shared_ptr<MovingCircle> &rr : *remaining_ripples )
         {
             ripples->emplace_back(rr);
         }
         remaining_ripples->clear();
         
-        //move ripple cricles
+        // move target circles 
         for( shared_ptr<MovingCircle> &c : *ripples )
         {
             moveCircle(c,true);
@@ -557,19 +597,19 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
+        // show help at top of screen
+        SDL_SetRenderDrawColor(renderer, 20, 20, 20, 0); //sets background
+        //SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, texture1, NULL, &rect1);//sets text
 
-        //render ripple cricles
+        //render ripple circles
         for( shared_ptr<MovingCircle> &c : *ripples )
         {
-            SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
             if ( ! c->collided ) {
-                int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
-                //if (res == -1)
-                //    cout << "=========== render ripple ERROR res: " << res << endl;
+                circleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
             } else { //draw as collided and update
-                int res = circleRGBA(renderer, c->p.x, c->p.y, c->r, 200, 100, 100, c->rgb.a);
-                SDL_SetRenderDrawColor(renderer, 200, 200, 50, 200);
-                //filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, 230, 10, 10, 255);
+                //circleRGBA(renderer, c->p.x, c->p.y, c->r, 200, 100, 100, c->rgb.a);
+                filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, 230, 10, 10, 255);
                 c->collision_render_count += 1;
             }
             if (c->collision_render_count < 20) {
@@ -582,11 +622,9 @@ int main(int argc, char *argv[]) {
             ripples->emplace_back(rr);
         }
         remaining_ripples->clear();
-
         //Render bullets
         for( shared_ptr<MovingCircle> &c : *bullets ) {
             SDL_SetRenderDrawColor( renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
-
             int res = filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
             if (res == -1)
                 cout << "=========== ERROR res: " << res << endl;
@@ -596,8 +634,20 @@ int main(int argc, char *argv[]) {
         SDL_SetRenderDrawColor( renderer, 200, 100, 200, 255 );
         SDL_RenderDrawLine(renderer, gun->x, gun->y, gun->x2, gun->y2);
 
+        bool end = false;
+        if (!start && ripples->size() == 0){
+            SDL_RenderClear(renderer);
+            SDL_RenderCopy(renderer, texture2, NULL, &rect2);//sets text
+            start = true;
+            idx = -1;
+            end = true;
+        }
+
         //Update the screen
         SDL_RenderPresent(renderer);
+        if (end) {
+            SDL_Delay(5000);
+        }
         SDL_Delay(delay);
         clock_t endTime = clock();
         clock_t ellapsedTime = endTime - startTime;

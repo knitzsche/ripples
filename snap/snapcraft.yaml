@@ -93,6 +93,7 @@ parts:
       - pkg-config
       - libsdl2-dev
       - libsdl2-gfx-dev
+      - libsdl2-ttf-dev
   pkgs:
     plugin: nil
     stage-packages:
@@ -102,6 +103,7 @@ parts:
       - xkb-data
       - libgles2-mesa
       - libgl1-mesa-glx
+      # TODO - ubuntu-fonts
   readmes:
     source: readmes
     plugin: dump
