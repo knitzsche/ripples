@@ -40,8 +40,7 @@ void get_info(){
   SDL_version linked;
   SDL_VERSION(&compiled);
   SDL_GetVersion(&linked);
-  printf("Info:\n");
-  printf("Compiled against SDL version %d.%d.%d ...\n",
+  printf("Compiled against SDL version %d.%d.%d.\n",
            compiled.major, compiled.minor, compiled.patch);
   printf("Linked against SDL version %d.%d.%d.\n",
            linked.major, linked.minor, linked.patch);
@@ -339,6 +338,14 @@ bool isCollided(shared_ptr<Circle> c1, shared_ptr<Circle> c2) {
     return false;
 }
 
+void help(){
+  printf("Left arrow: rotates gun counter-clockwise.\n");
+  printf("Right arrow: rotates gun clockwise.\n");
+  printf("Space: shoots.\n");
+  printf("ESC: quits.\n");
+
+  printf("See also README* in install directory.\n");
+}
 
 int main(int argc, char *argv[]) {
     bool quit = false;
@@ -347,7 +354,10 @@ int main(int argc, char *argv[]) {
     if (argc == 2 ){
         if (strcmp(argv[1], "info") == 0){
             get_info();
-            quit = true;
+            return 1;
+        } else if (strcmp(argv[1], "help") == 0){
+            help();
+            return 1;
         } else {
             delay = atoi(argv[1]);
         }

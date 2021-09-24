@@ -1,5 +1,5 @@
 name: ripples
-version: "3.1"
+version: "3.2"
 summary: Ripples game
 description: Make ripples by touching and clicking
 confinement: strict
@@ -102,3 +102,6 @@ parts:
       - xkb-data
       - libgles2-mesa
       - libgl1-mesa-glx
+  readmes:
+    source: readmes
+    plugin: dump
