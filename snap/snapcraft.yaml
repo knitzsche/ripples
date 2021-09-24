@@ -51,6 +51,7 @@ apps:
      - x11
   run:
     command-chain:
+      - checkroot.sh
       - bin/wayland-launch
     command: usr/local/bin/ripples
     environment:
@@ -72,7 +73,6 @@ apps:
      - network-bind
      - network-control
      - x11
-
 
 parts:
   mir-kiosk-snap-launch:
