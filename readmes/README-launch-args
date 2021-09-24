@@ -1,0 +1,8 @@
+(this may not be up to date)
+
+launch ripples with the follow args
+
+an integer: this slows down or speeds up game interation allowing you to adjust the speed for your system. try 20
+
+info: shows info including sdl version compiled against and linked agains
+

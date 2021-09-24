@@ -1,0 +1,10 @@
+to run this on classic Ubuntu (focal tested):
+
+1) install ubuntu-frame
+
+2) start frame with provided script:
+
+$ sudo /snap/ripples/current/frame-desktop.sh
+
+run rippes.desktop
+
