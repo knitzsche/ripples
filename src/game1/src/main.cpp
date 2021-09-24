@@ -1,5 +1,5 @@
 /**
- *
+ * vim:expandtab ts=4 sw=4
  * Copyright (C) 2021 Kyle Nitzsche
  *
  * This program is free software: you can redistribute it and/or modify
@@ -34,6 +34,9 @@
 
 using namespace std;
 
+int SCREEN_WIDTH  = 1280;
+int SCREEN_HEIGHT = 720;
+
 void get_info(){
   SDL_WINDOW_OPENGL;
   SDL_version compiled;
@@ -45,9 +48,6 @@ void get_info(){
   printf("Linked against SDL version %d.%d.%d.\n",
            linked.major, linked.minor, linked.patch);
 }
-
-int SCREEN_WIDTH  = 1280;
-int SCREEN_HEIGHT = 720;
 
 void setScreen() {
     SDL_DisplayMode DM;
@@ -69,8 +69,8 @@ void addRect(shared_ptr<vector<shared_ptr<SDL_Rect>>> rs) {
     rs->emplace_back(r);
 }
 
+// used to keep rotating gun on arrow key hold down
 int last_aim = 0; // 0 up, 1 right, 2 down, 3 left
-
 
 struct Position {
     double x;
@@ -468,46 +468,12 @@ int main(int argc, char *argv[]) {
                 SDL_GetMouseState(&x, &y);
                 //addMovingCircle(ripples, x, y);
             }
-	    */
+            */
             //if (e.type == SDL_FINGERDOWN) {
                 //addRipple(ripples, e.tfinger.x, e.tfinger.y);
                 //addGridToRipple((*ripples->back()), (*grid_circles));
             //}
             int amt = 8;
-            if (e.type == SDL_KEYUP) {
-              switch(e.key.keysym.scancode){
-                  case SDL_SCANCODE_LEFT:
-                      aim = false;
-                      break;
-                  case SDL_SCANCODE_RIGHT:
-                      aim = false;
-                      break;
-                  case SDL_SCANCODE_UP:
-                      aim = false;
-                      break;
-                  case SDL_SCANCODE_DOWN:
-                      aim = false;
-                      break;
-              }
-            }
-            if (aim){
-              switch (last_aim){
-                case 3:
-                    mx -= amt;
-                    rotateGun(gun,2);
-                    last_aim = 3;
-                case 1:
-                    mx += amt;
-                    rotateGun(gun,1);
-                    last_aim = 1;
-                /*case 0:
-                    mx += amt;
-                    rotateGun(gun,1);
-                    last_aim = 1;
-                */
-
-              }
-            }
             if (e.type == SDL_KEYDOWN) {
                 cout << "key down: " << SDL_GetKeyName(e.key.keysym.sym) << endl;
                 if (e.key.keysym.scancode == SDL_SCANCODE_LEFT) {
@@ -538,7 +504,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        //render grid cricles TTO SLOW FOR RPI3
+        //render grid cricles TO SLOW FOR RPI3
         /*for( shared_ptr<Circle> &c : *grid_circles ) {
             SDL_SetRenderDrawColor(renderer, c->rgb.b, c->rgb.g, c->rgb.r, c->rgb.a);
             int res = filledCircleRGBA(renderer, c->p.x, c->p.y, c->r, c->rgb.r, c->rgb.g, c->rgb.b, c->rgb.a);
@@ -548,6 +514,7 @@ int main(int argc, char *argv[]) {
 
         // reset ripples to exclude those that have expanded too much
         shared_ptr<vector<shared_ptr<MovingCircle>>> remaining_ripples = make_shared<vector<shared_ptr<MovingCircle>>>();
+
         for( shared_ptr<MovingCircle> &c : *ripples )
         {
             if (c->r <= SCREEN_WIDTH)// this can be improved
