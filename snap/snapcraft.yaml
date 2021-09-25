@@ -82,6 +82,9 @@ parts:
   launchers:
     source: launchers
     plugin: dump
+  dump:
+    source: dump
+    plugin: dump
   ripples:
     plugin: cmake
     source: src/
@@ -99,6 +102,7 @@ parts:
     stage-packages:
       - libsdl2-2.0-0
       - libsdl2-gfx-1.0-0
+      - libsdl2-ttf-2.0-0
       - libpulse0
       - xkb-data
       - libgles2-mesa

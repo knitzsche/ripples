@@ -38,6 +38,28 @@ using namespace std;
 int SCREEN_WIDTH  = 1280;
 int SCREEN_HEIGHT = 720;
 
+string get_env_var(char * varname){
+    const char* ret = getenv(varname);
+    string var;
+    if (ret != NULL) {
+        return string(ret);
+    } else {
+        return string("not set");
+    }
+    return string("oops"); 
+}
+
+const char * get_env_var_const(char * varname){
+    const char* ret = getenv(varname);
+    if (ret != NULL) {
+        return ret;
+    } else {
+        return "not set";
+    }
+    return "oops"; 
+}
+
+
 void get_info(){
   SDL_WINDOW_OPENGL;
   SDL_version compiled;
@@ -368,7 +390,18 @@ SDL_Texture *texture1, *texture2;
 
 bool short_game = false; //use short flag to have short game
 
+bool is_snap = false;
+
 int main(int argc, char *argv[]) {
+
+    // check if is snap
+    string snap = get_env_var("SNAP");
+    if ( snap != "not_set"){
+        if (snap.find("/snap/",0) == 0){
+            is_snap=true;
+       } 
+    }
+
     bool quit = false;
     int delay = 0; // per iter delay to adjust for current system
 
@@ -412,7 +445,7 @@ int main(int argc, char *argv[]) {
         printf("Is Wayland\n");
       }
     } else {
-      printf("Probably not a wayland system. Possible error. %s\n", SDL_GetError());
+      printf("Probably not a wayland system. Possible error (expected on classic though). %s\n", SDL_GetError());
     }
     
     renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
@@ -424,10 +457,21 @@ int main(int argc, char *argv[]) {
 
     //onscreen text
     TTF_Init();
-    TTF_Font *font = TTF_OpenFont("/usr/share/fonts/truetype/ubuntu/Ubuntu-C.ttf", 24);
+    TTF_Font *font;
+    if (is_snap) {
+        const char* snap = get_env_var_const("SNAP");
+        const char* path = "/fonts/Ubuntu-C.ttf";
+        char result[500];
+        strcpy(result,snap);
+        strcat(result,path);
+        font = TTF_OpenFont(result, 24);
+    } else {
+        printf("NOT a snap\n");
+        font = TTF_OpenFont("/usr/share/fonts/truetype/ubuntu/Ubuntu-C.ttf", 24);
+    }
     if (font == NULL) {
         fprintf(stderr, "error: font not found\n");
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     shared_ptr<Gun> gun = make_shared<Gun>();
@@ -533,7 +577,7 @@ int main(int argc, char *argv[]) {
             //}
             int amt = 8;
             if (e.type == SDL_KEYDOWN) {
-                cout << "key down: " << SDL_GetKeyName(e.key.keysym.sym) << endl;
+                //cout << "key down: " << SDL_GetKeyName(e.key.keysym.sym) << endl;
                 if (e.key.keysym.scancode == SDL_SCANCODE_LEFT) {
                     mx -= amt;
                     rotateGun(gun,2);
