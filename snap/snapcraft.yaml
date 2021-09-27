@@ -1,5 +1,5 @@
-name: ripples
-version: "3.2"
+name: demo-game-0
+version: "1.0"
 summary: Ripples game
 description: Make ripples by touching and clicking
 confinement: strict
@@ -107,7 +107,6 @@ parts:
       - xkb-data
       - libgles2-mesa
       - libgl1-mesa-glx
-      # TODO - ubuntu-fonts
   readmes:
     source: readmes
     plugin: dump
